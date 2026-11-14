@@ -12,6 +12,16 @@ import { FORMAS, nomeForma } from "@/lib/types";
 import { registarVenda } from "@/app/actions/vendas";
 import type { Peca, Variante } from "@/lib/catalogo";
 
+/** Valor exacto e as notas redondas seguintes (500, 1000, 5000), para o numerário. */
+function rapidos(total: number): number[] {
+  const out = [total];
+  for (const m of [500, 1000, 5000]) {
+    const x = Math.ceil(total / m) * m;
+    if (x > 0 && !out.includes(x)) out.push(x);
+  }
+  return out.filter((x) => x > 0).slice(0, 4);
+}
+
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" | "cesto" }) {
@@ -23,6 +33,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
   const [cor, setCor] = useState<string | null>(null);
   const [tam, setTam] = useState<string | null>(null);
   const [forma, setForma] = useState("");
+  const [recebido, setRecebido] = useState("");
   const [erro, setErro] = useState("");
   const [juntou, setJuntou] = useState("");
   const [feito, setFeito] = useState<{ total: number; forma: string; pecas: number } | null>(null);
@@ -92,6 +103,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
       }
       cesto.limpar();
       setForma("");
+      setRecebido("");
       setFeito(resumo);
       router.refresh();
     });
@@ -104,31 +116,39 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
     <div className="c-page">
       <div className="c-duas">
         <div className={`c-col${modo === "cesto" ? " c-so-pc" : ""}`}>
-          <h1 className="h1">Toque na peça para vender</h1>
+          <h1 className="h1">Vender</h1>
           {juntou ? (
             <div className="c-aviso ok" role="status">
-              <Icon name="certo" />
+              <Icon name="certo" size={18} />
               <span style={{ flex: 1 }}>Juntou ao cesto: {juntou}</span>
               <Link href="/vender/cesto" className="c-so-tel" style={{ fontWeight: 800 }}>
                 Ver cesto
               </Link>
             </div>
           ) : null}
-          <div className="c-procura">
-            <Icon name="procurar" size={22} />
-            <label htmlFor="procura" className="visually-hidden">Procurar peça</label>
-            <input id="procura" type="search" placeholder="Procurar peça, cor ou número" value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          {categorias.length > 1 ? (
-            <div className="c-chips">
-              <button type="button" className="c-chip" aria-pressed={!cat} onClick={() => setCat("")}>Tudo</button>
-              {categorias.map((c) => (
-                <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>
-              ))}
+          <div className="v-linhabusca">
+            <div className="v-busca">
+              <label className="c-procura">
+                <Icon name="procurar" size={16} />
+                <span className="visually-hidden">Procurar peça</span>
+                <input id="procura" type="search" placeholder="Procurar peça" value={q} onChange={(e) => setQ(e.target.value)} />
+              </label>
+              {categorias.length > 1 ? (
+                <label style={{ display: "contents" }}>
+                  <span className="visually-hidden">Tipo de peça</span>
+                  <select className="select" value={cat} onChange={(e) => setCat(e.target.value)}>
+                    <option value="">Todas</option>
+                    {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
+              ) : null}
             </div>
-          ) : null}
+          </div>
           {lista.length === 0 ? (
-            <p className="empty">{pecas.length ? "Nenhuma peça encontrada." : "Ainda não há peças. A gestora regista-as em Peças e stock."}</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10, padding: "8px 0" }}>
+              <p className="muted" style={{ margin: 0 }}>{pecas.length ? (q ? `Nenhuma peça encontrada para “${q}”${cat ? ` em ${cat}` : ""}.` : `Ainda não há peças em ${cat}.`) : "Ainda não há peças. A gestora regista-as em Peças e stock."}</p>
+              {pecas.length ? <button type="button" className="btn" onClick={() => { setQ(""); setCat(""); }}>Ver todas as peças</button> : null}
+            </div>
           ) : (
             <div className="c-grid largo">
               {lista.map((p) => {
@@ -152,7 +172,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
           {feito ? (
             <>
               <div className="c-feito">
-                <span className="c-feito-ic"><Icon name="certo" size={58} stroke={2.6} /></span>
+                <span className="c-feito-ic"><Icon name="certo" size={30} stroke={2.4} /></span>
                 <h2 className="h1 sm">Venda registada!</h2>
                 <p className="p muted" style={{ fontSize: 17, lineHeight: "25px" }}>
                   {mt(feito.total)} · {nomeForma(feito.forma)} · {feito.pecas} {feito.pecas === 1 ? "peça" : "peças"}
@@ -160,21 +180,21 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                 </p>
               </div>
               <button type="button" className="c-cta" onClick={() => { setFeito(null); if (modo === "cesto") router.push("/vender"); }}>
-                <Icon name="vender" /> Fazer outra venda
+                <Icon name="vender" size={18} /> Nova venda
               </button>
-              <Link href="/hoje" className="c-outline"><Icon name="recibo" size={22} /> Ver o que vendi hoje</Link>
+              <Link href="/hoje" className="c-outline"><Icon name="recibo" size={16} /> As minhas vendas de hoje</Link>
             </>
           ) : sel ? (
             <>
               <button type="button" className="c-back c-so-tel" onClick={fechar} style={{ cursor: "pointer" }}>
-                <Icon name="voltar" size={22} stroke={2.2} /> Voltar
+                <Icon name="voltar" size={16} stroke={2} /> Voltar
               </button>
-              <div className="c-so-tel" style={{ maxWidth: 260, alignSelf: "center", width: "100%" }}>
+              <div className="c-so-tel" style={{ maxWidth: 160, alignSelf: "center", width: "100%" }}>
                 <Foto path={sel.foto} categoria={sel.categoria} alt={sel.nome} />
               </div>
               <div className="c-entre">
                 <h2 className="h1 xs">{sel.nome}</h2>
-                <p className="p" style={{ fontSize: 21, fontWeight: 800, whiteSpace: "nowrap" }}>{mt(sel.preco)}</p>
+                <p className="p" style={{ fontSize: 17, fontWeight: 700, whiteSpace: "nowrap" }}>{mt(sel.preco)}</p>
               </div>
               {cores.length ? (
                 <>
@@ -210,13 +230,13 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
               {escolhida && escolhida.stock === 1 ? <p className="c-q pouco" style={{ fontSize: 15 }}>{nomeVariante(escolhida) || "Esta peça"}: é a última.</p> : null}
               {erro ? <p className="alert alert-error" role="alert">{erro}</p> : null}
               <button type="button" className="c-cta" onClick={porNoCesto} disabled={!escolhida || escolhida.stock <= 0} aria-disabled={!escolhida || escolhida.stock <= 0}>
-                <Icon name="mais" /> Pôr no cesto · {mt(sel.preco)}
+                <Icon name="mais" size={18} /> Juntar ao cesto · {mt(sel.preco)}
               </button>
               <button type="button" className="btn btn-text c-so-pc" onClick={fechar}>Cancelar</button>
             </>
           ) : (
             <>
-              <h2 className="h1 sm">O seu cesto</h2>
+              <h2 className="h1 xs">Cesto</h2>
               {cesto.linhas.length === 0 ? (
                 <p className="empty">O cesto está vazio. Toque numa peça para a juntar.</p>
               ) : (
@@ -232,37 +252,54 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                       </div>
                       <div className="c-qtd">
                         <button type="button" aria-label={`Menos uma ${l.nome}`} onClick={() => cesto.mudar(l.variante_id, l.quantidade - 1)}>
-                          <Icon name={l.quantidade === 1 ? "lixo" : "menos"} size={18} />
+                          <Icon name={l.quantidade === 1 ? "lixo" : "menos"} size={16} />
                         </button>
                         <output aria-label="Quantidade">{l.quantidade}</output>
                         <button type="button" aria-label={`Mais uma ${l.nome}`} disabled={l.quantidade >= max} onClick={() => cesto.mudar(l.variante_id, l.quantidade + 1)}>
-                          <Icon name="mais" size={18} />
+                          <Icon name="mais" size={16} />
                         </button>
                       </div>
                     </div>
                   );
                 })
               )}
-              <Link href="/vender" className="c-outline c-so-tel" style={{ minHeight: 52 }}><Icon name="mais" size={20} /> Juntar outra peça</Link>
+              <Link href="/vender" className="c-outline c-so-tel"><Icon name="mais" size={16} /> Juntar mais peças</Link>
               {cesto.linhas.length ? (
                 <>
                   <div className="c-entre">
-                    <span style={{ fontSize: 18, fontWeight: 700, color: "var(--suave)" }}>Total</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--suave)" }}>Total</span>
                     <span className="c-total-v">{mt(cesto.total)}</span>
                   </div>
                   <p className="c-rot">Como pagou o cliente?</p>
                   <div className="c-opts" style={{ ["--cols" as string]: 2 }}>
                     {FORMAS.map((f) => (
-                      <button key={f.id} type="button" className="c-opt" style={{ minHeight: 76 }} aria-pressed={forma === f.id} onClick={() => { setForma(f.id); setErro(""); }}>
-                        <Icon name={f.icon} size={26} />
-                        {f.nome}
+                      <button key={f.id} type="button" className="c-opt" style={{ flexDirection: "row", gap: 8, justifyContent: "flex-start", padding: "0 10px" }} aria-pressed={forma === f.id} onClick={() => { setForma(f.id); setErro(""); }}>
+                        <Icon name={f.icon} size={16} />
+                        {f.curto}
                       </button>
                     ))}
                   </div>
+                  {forma === "numerario" ? (
+                    <>
+                      <div className="field">
+                        <label className="label" htmlFor="recebido">Valor recebido (MT)</label>
+                        <input id="recebido" className="input" inputMode="numeric" value={recebido} placeholder="Ex.: 5000" onChange={(e) => setRecebido(e.target.value.replace(/[^0-9]/g, ""))} />
+                      </div>
+                      <div role="group" aria-label="Valores rápidos" className="v-rapidos">
+                        {rapidos(cesto.total).map((v, i) => (
+                          <button key={v} type="button" className="v-rapido" aria-pressed={Number(recebido) === v} onClick={() => setRecebido(String(v))}>{i === 0 ? "Valor exacto" : mt(v)}</button>
+                        ))}
+                      </div>
+                      <p role="status" style={{ margin: 0, fontSize: 14, fontWeight: 600, color: !recebido ? "var(--fraco)" : Number(recebido) >= cesto.total ? "var(--paga)" : "var(--porpagar)" }}>
+                        {!recebido ? "Escreva quanto recebeu para ver o troco." : Number(recebido) >= cesto.total ? `Troco: ${mt(Number(recebido) - cesto.total)}` : `Faltam ${mt(cesto.total - Number(recebido))}`}
+                      </p>
+                    </>
+                  ) : null}
                   {erro ? <p className="alert alert-error" role="alert">{erro}</p> : null}
                   <button type="button" className="c-cta" onClick={terminar} disabled={pending} aria-disabled={pending}>
-                    <Icon name="certo" /> {pending ? "A registar…" : `Terminar venda · ${mt(cesto.total)}`}
+                    <Icon name="certo" size={18} /> {pending ? "A registar…" : `Registar venda · ${mt(cesto.total)}`}
                   </button>
+                  {!forma ? <p className="hint" role="status" style={{ textAlign: "center" }}>Escolha como o cliente pagou.</p> : null}
                 </>
               ) : null}
             </>

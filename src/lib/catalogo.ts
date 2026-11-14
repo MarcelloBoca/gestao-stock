@@ -70,4 +70,7 @@ export function aRepor(pecas: Peca[]) {
   return out.sort((a, b) => a.variante.stock - b.variante.stock);
 }
 
+/** A peça está a acabar quando alguma cor/número ainda tem stock mas já não passa do mínimo (esgotadas não contam). */
+export const pecaAAcabar = (p: Peca) => p.activo && p.variantes.some((v) => v.activa && v.stock > 0 && v.stock <= Math.max(1, p.stock_minimo));
+
 export { nomeVariante } from "./cores";

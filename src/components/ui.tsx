@@ -5,7 +5,7 @@ import { fotoUrl } from "@/lib/supabase/config";
 export function BackLink({ href, label = "Voltar" }: { href: string; label?: string }) {
   return (
     <Link href={href} className="c-back">
-      <Icon name="voltar" size={22} stroke={2.2} />
+      <Icon name="voltar" size={16} stroke={2} />
       {label}
     </Link>
   );
@@ -25,7 +25,7 @@ export function Foto({ path, categoria, alt, size, className = "" }: { path?: st
   }
   return (
     <span role="img" aria-label={alt} className={`c-foto c-foto-vazia ${className}`} style={style}>
-      <Icon name={iconeCategoria(categoria)} size={size ? Math.max(20, Math.round(size * 0.45)) : 56} stroke={1.4} />
+      <Icon name={iconeCategoria(categoria)} size={size ? Math.max(16, Math.round(size * 0.45)) : className.includes("c-mini") ? 20 : 40} stroke={1.4} />
     </span>
   );
 }

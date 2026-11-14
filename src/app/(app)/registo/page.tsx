@@ -27,7 +27,7 @@ export default async function RegistoPage({ searchParams }: { searchParams: Prom
   const url = (o: Record<string, string>) => `/registo?${new URLSearchParams(Object.fromEntries(Object.entries({ t: grupo, u: pessoa, ...o }).filter(([, v]) => v)))}`;
   return (
     <div className="c-page" style={{ maxWidth: 900 }}>
-      <PageHead title="Quem fez o quê" sub="Este registo não se pode apagar nem mudar." />
+      <PageHead title="Registo de acções" sub="Quem fez o quê. Este registo não se pode apagar nem mudar." />
       <div className="c-chips">
         {[["", "Tudo"], ["vendas", "Vendas"], ["stock", "Stock"], ["precos", "Peças e preços"], ["contas", "Contas"]].map(([k, l]) => (
           <Link key={k} href={url({ t: k })} className="c-chip" aria-current={grupo === k ? "true" : undefined}>{l}</Link>

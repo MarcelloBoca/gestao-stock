@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { ADMIN, mensagemErro, requireUser } from "@/lib/auth";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
+import { pinActivo, pinFraco, pinValido, senhaDoPin } from "@/lib/pin";
 import type { ActionState } from "@/lib/types";
 
 const NOMES: Record<string, string> = {
-  criar: "Conta criada. Dê o utilizador e a palavra-passe à pessoa.",
-  repor_senha: "Palavra-passe nova guardada. Dê-a à pessoa.",
+  criar: "Conta criada. Dê o utilizador e o PIN à pessoa.",
+  repor_senha: "PIN novo guardado. Dê-o à pessoa.",
   mudar_perfil: "Função mudada.",
   desactivar: "Conta desactivada. Esta pessoa já não consegue entrar.",
   activar: "Conta activada.",
@@ -20,8 +21,22 @@ export async function gerirConta(_prev: ActionState, fd: FormData): Promise<Acti
     const { sb } = await requireUser(ADMIN);
     const accao = String(fd.get("accao") ?? "");
     if (!NOMES[accao]) return { error: "Acção desconhecida." };
-    if ((accao === "criar" || accao === "repor_senha") && fd.get("password") !== fd.get("confirm")) {
-      return { error: "As duas palavras-passe não são iguais." };
+    let password: FormDataEntryValue | null = fd.get("password");
+    if (accao === "criar" || accao === "repor_senha") {
+      // A administradora dá um PIN de 4 números; o Supabase recebe a palavra-passe derivada dele.
+      if (!pinActivo()) return { error: "A entrada com PIN ainda não está ligada neste servidor (falta a chave PIN_SECRET)." };
+      const pin = String(fd.get("pin") ?? "");
+      if (!pinValido(pin)) return { error: "O PIN tem de ter 4 números." };
+      if (pinFraco(pin)) return { error: "Esse PIN é fácil de adivinhar. Evite números iguais ou seguidos (1111, 1234)." };
+      if (pin !== String(fd.get("confirm") ?? "")) return { error: "Os dois PINs não são iguais." };
+      let username = String(fd.get("username") ?? "").trim().toLowerCase();
+      if (accao === "repor_senha") {
+        const { data: u } = await sb.from("utilizadores").select("username").eq("id", String(fd.get("id") ?? "")).maybeSingle();
+        if (!u?.username) return { error: "Conta não encontrada." };
+        username = String(u.username);
+      }
+      if (!/^[a-z0-9._-]{3,32}$/.test(username)) return { error: "O utilizador só pode ter letras sem acentos, números, ponto ou hífen (3 a 32)." };
+      password = senhaDoPin(username, pin);
     }
     const { data } = await sb.auth.getSession();
     const token = data.session?.access_token;
@@ -30,7 +45,7 @@ export async function gerirConta(_prev: ActionState, fd: FormData): Promise<Acti
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        accao, id: fd.get("id"), nome: fd.get("nome"), username: fd.get("username"), password: fd.get("password"), perfil: fd.get("perfil"),
+        accao, id: fd.get("id"), nome: fd.get("nome"), username: typeof fd.get("username") === "string" ? String(fd.get("username")).trim().toLowerCase() : fd.get("username"), password, perfil: fd.get("perfil"),
       }),
       cache: "no-store",
     });

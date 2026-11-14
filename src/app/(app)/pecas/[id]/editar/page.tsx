@@ -16,7 +16,7 @@ export default async function EditarPecaPage({ params }: { params: Promise<{ id:
   if (!p) notFound();
   const activas = p.variantes.filter((v) => v.activa);
   return (
-    <div className="c-page c-narrow" style={{ maxWidth: 680 }}>
+    <div className="c-page" style={{ maxWidth: 1000 }}>
       <PageHead title="Editar peça" sub={p.nome} back={{ href: `/pecas/${p.id}`, label: "Peça" }} />
       <p className="alert alert-info">Mudar o preço não altera as vendas já feitas. Tirar uma cor ou um número deixa de o mostrar na venda; o histórico fica guardado.</p>
       <PecaForm

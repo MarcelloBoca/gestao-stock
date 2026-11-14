@@ -11,7 +11,7 @@ export default async function NovaPecaPage() {
   const { sb } = await requireUser(GESTAO);
   const { categorias, cores, tamanhos } = await catalogo(sb);
   return (
-    <div className="c-page c-narrow" style={{ maxWidth: 680 }}>
+    <div className="c-page" style={{ maxWidth: 1000 }}>
       <PageHead title="Nova peça" back={{ href: "/pecas", label: "Peças" }} />
       <PecaForm categorias={categorias.filter((c) => c.activa)} cores={cores} tamanhos={tamanhos} />
     </div>

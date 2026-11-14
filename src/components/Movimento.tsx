@@ -48,8 +48,8 @@ export default function Movimento({ pecas, inicial }: { pecas: Peca[]; inicial?:
       <input type="hidden" name="sentido" value={sentido} />
       <div className="c-opts" style={{ ["--cols" as string]: 2 }}>
         {TIPOS.map((t) => (
-          <button key={t.id} type="button" className="c-opt" style={{ minHeight: 86 }} aria-pressed={tipo === t.id} onClick={() => setTipo(t.id)}>
-            <Icon name={t.icon} size={28} /> {t.nome}
+          <button key={t.id} type="button" className="c-opt" style={{ flexDirection: "row", justifyContent: "flex-start", gap: 8, padding: "0 12px", minHeight: 44 }} aria-pressed={tipo === t.id} onClick={() => setTipo(t.id)}>
+            <Icon name={t.icon} size={16} /> {t.nome}
           </button>
         ))}
       </div>
@@ -101,9 +101,9 @@ export default function Movimento({ pecas, inicial }: { pecas: Peca[]; inicial?:
       ) : null}
       <p className="c-rot">{tipo === "entrada" ? "Quantas entram?" : tipo === "ajuste" ? `Quantas a ${sentido === "tirar" ? "tirar" : "juntar"}?` : "Quantas?"}</p>
       <div className="c-stepper">
-        <button type="button" aria-label="Menos uma" onClick={() => setQtd((q) => Math.max(1, q - 1))}><Icon name="menos" size={30} stroke={2.6} /></button>
+        <button type="button" aria-label="Menos uma" onClick={() => setQtd((q) => Math.max(1, q - 1))}><Icon name="menos" size={18} stroke={2.2} /></button>
         <output aria-live="polite">{sinal}{qtd}</output>
-        <button type="button" className="mais" aria-label="Mais uma" onClick={() => setQtd((q) => Math.min(999, q + 1))}><Icon name="mais" size={30} stroke={2.6} /></button>
+        <button type="button" className="mais" aria-label="Mais uma" onClick={() => setQtd((q) => Math.min(999, q + 1))}><Icon name="mais" size={18} stroke={2.2} /></button>
       </div>
       <div className="field">
         <label className="label" htmlFor="motivo">{tipo === "entrada" ? "Nota (opcional)" : "Motivo (obrigatório)"}</label>
@@ -111,7 +111,7 @@ export default function Movimento({ pecas, inicial }: { pecas: Peca[]; inicial?:
           placeholder={tipo === "entrada" ? "Ex.: reposição de Novembro" : tipo === "devolucao" ? "Ex.: não serviu" : tipo === "defeito" ? "Ex.: salto descolado" : "Ex.: contagem do mês"} />
       </div>
       <SubmitButton className="c-cta" pendingText="A guardar…" disabled={!v}>
-        <Icon name="certo" /> Guardar: {verbo} {qtd === 1 ? "peça" : "peças"}
+        <Icon name="certo" size={16} /> Guardar: {verbo} {qtd === 1 ? "peça" : "peças"}
       </SubmitButton>
     </ActionForm>
   );

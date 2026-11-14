@@ -35,7 +35,7 @@ export default async function FuncionariasPage() {
     <div className="c-page c-narrow" style={{ maxWidth: 760 }}>
       <PageHead title="Funcionárias" />
       <details className="c-card c-mais">
-        <summary className="c-cta escuro"><Icon name="mais" /> Criar conta nova</summary>
+        <summary className="c-cta escuro"><Icon name="mais" size={18} /> Criar conta nova</summary>
         <ActionForm action={gerirConta} resetOnSuccess>
           <input type="hidden" name="accao" value="criar" />
           <div className="field"><label className="label" htmlFor="n-nome">Nome</label><input id="n-nome" name="nome" className="input on-card" required maxLength={80} placeholder="Ex.: Lúcia Mabunda" /></div>
@@ -44,29 +44,32 @@ export default async function FuncionariasPage() {
             <input id="n-user" name="username" className="input on-card" required maxLength={32} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="Ex.: lucia" />
             <p className="hint">Letras sem acentos, números, ponto ou hífen.</p>
           </div>
-          <div className="field"><label className="label" htmlFor="n-pw">Palavra-passe inicial</label><input id="n-pw" name="password" type="text" className="input on-card" required minLength={8} maxLength={128} autoComplete="off" /></div>
-          <div className="field"><label className="label" htmlFor="n-pw2">Repetir a palavra-passe</label><input id="n-pw2" name="confirm" type="text" className="input on-card" required minLength={8} maxLength={128} autoComplete="off" /></div>
+          <div className="v-dois">
+            <div className="field"><label className="label" htmlFor="n-pin">PIN (4 números)</label><input id="n-pin" name="pin" type="text" inputMode="numeric" pattern="\d{4}" className="input on-card" required minLength={4} maxLength={4} autoComplete="off" /></div>
+            <div className="field"><label className="label" htmlFor="n-pin2">Repetir o PIN</label><input id="n-pin2" name="confirm" type="text" inputMode="numeric" pattern="\d{4}" className="input on-card" required minLength={4} maxLength={4} autoComplete="off" /></div>
+          </div>
+          <p className="hint">A pessoa entra tocando no nome e escrevendo este PIN. Pode mudá-lo depois em “Mudar o meu PIN”.</p>
           <p className="c-rot">Função</p>
           <Perfis actual="vendedor" />
-          <SubmitButton className="c-cta" pendingText="A criar…"><Icon name="certo" /> Criar conta</SubmitButton>
+          <SubmitButton className="c-cta" pendingText="A criar…"><Icon name="certo" size={18} /> Criar conta</SubmitButton>
         </ActionForm>
       </details>
       {(data ?? []).map((u) => (
         <details key={u.id} className="c-card c-mais">
           <summary className="c-entre" style={{ alignItems: "center" }}>
             <span className="c-avatar">{u.nome.charAt(0).toUpperCase()}</span>
-            <span className="c-linha-m"><b style={{ fontSize: 17 }}>{u.nome}{u.id === user.id ? " (eu)" : ""}</b><span className="c-linha-s">{PERFIS[u.perfil as Perfil]} · {u.username}</span></span>
+            <span className="c-linha-m"><b style={{ fontSize: 15 }}>{u.nome}{u.id === user.id ? " (eu)" : ""}</b><span className="c-linha-s">{PERFIS[u.perfil as Perfil]} · {u.username}</span></span>
             {!u.activo ? <Pill tone="zero">Desactivada</Pill> : bloqueadas.has(u.username) ? <Pill tone="pouco">Bloqueada 10 min</Pill> : <Pill tone="ok">Activa</Pill>}
           </summary>
           <p className="p muted" style={{ fontSize: 14 }}>{PODE[u.perfil as Perfil]}</p>
           <ActionForm action={gerirConta} resetOnSuccess>
             <input type="hidden" name="accao" value="repor_senha" /><input type="hidden" name="id" value={u.id} />
-            <p className="c-rot">Dar palavra-passe nova</p>
-            <div className="inline">
-              <input name="password" type="text" className="input on-card" style={{ flex: 1, minWidth: 140 }} required minLength={8} maxLength={128} placeholder="Nova (8+ caracteres)" aria-label="Nova palavra-passe" autoComplete="off" />
-              <input name="confirm" type="text" className="input on-card" style={{ flex: 1, minWidth: 140 }} required minLength={8} maxLength={128} placeholder="Repetir" aria-label="Repetir a palavra-passe" autoComplete="off" />
+            <p className="c-rot">Dar um PIN novo (se se esqueceu)</p>
+            <div className="v-dois">
+              <input name="pin" type="text" inputMode="numeric" pattern="\d{4}" className="input on-card" required minLength={4} maxLength={4} placeholder="PIN novo" aria-label="PIN novo" autoComplete="off" />
+              <input name="confirm" type="text" inputMode="numeric" pattern="\d{4}" className="input on-card" required minLength={4} maxLength={4} placeholder="Repetir" aria-label="Repetir o PIN" autoComplete="off" />
             </div>
-            <SubmitButton className="btn btn-primary" pendingText="A guardar…"><Icon name="chave" size={20} /> Guardar palavra-passe nova</SubmitButton>
+            <SubmitButton className="btn btn-primary" pendingText="A guardar…"><Icon name="cadeado" size={16} /> Guardar PIN novo</SubmitButton>
           </ActionForm>
           {u.id !== user.id ? (
             <>

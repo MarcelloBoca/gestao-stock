@@ -54,9 +54,9 @@ export default async function VendaPage({ params }: { params: Promise<{ id: stri
       ) : null}
       {v.estado !== "anulada" ? (
         <>
-          <Link href={`/vendas/${v.id}/corrigir`} className="c-cta escuro"><Icon name="lapis" /> Corrigir esta venda</Link>
+          <Link href={`/vendas/${v.id}/corrigir`} className="c-cta escuro"><Icon name="lapis" size={16} /> Corrigir esta venda</Link>
           <details className="c-card c-mais">
-            <summary className="c-outline perigo"><Icon name="x" size={22} /> Anular esta venda</summary>
+            <summary className="c-outline perigo"><Icon name="x" size={16} /> Anular esta venda</summary>
             <ActionForm action={anularVenda} confirmText="Anular esta venda? As peças voltam ao stock.">
               <input type="hidden" name="id" value={v.id} />
               <div className="field">

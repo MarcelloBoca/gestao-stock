@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GESTAO, requireUser } from "@/lib/auth";
 import { catalogo } from "@/lib/catalogo";
-import { mt } from "@/lib/format";
+import { diaCurto, diaIso, hora, mt, somarDias } from "@/lib/format";
 import { lerPeriodo } from "@/lib/periodo";
 import { FORMAS } from "@/lib/types";
-import { relatorio } from "@/lib/vendas";
+import { listarVendas, relatorio } from "@/lib/vendas";
 import { Escuro, Foto, PageHead } from "@/components/ui";
 import { FiltroPeriodo } from "@/components/FiltroPeriodo";
-import Icon from "@/components/Icon";
 
 export const metadata: Metadata = { title: "Relatórios" };
 export const dynamic = "force-dynamic";
+
+const DIA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 /** RL-02..RL-04: vendas por período, forma de pagamento, peça, categoria e vendedora; stock disponível. */
 export default async function RelatoriosPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -62,63 +64,125 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
     );
   }
 
-  const rel = await relatorio(sb, periodo.de, periodo.ate);
+  const [rel, vendas] = await Promise.all([relatorio(sb, periodo.de, periodo.ate), listarVendas(sb, periodo.de, periodo.ate, { limite: 3000 })]);
+  const fotos = new Map(cat.pecas.map((p) => [p.id, p]));
+  const pecasVendidas = rel.por_produto.reduce((s, p) => s + p.quantidade, 0);
   const maxForma = Math.max(1, ...Object.values(rel.por_forma));
   const maxCat = Math.max(1, ...rel.por_categoria.map((c) => c.total));
-  const fotos = new Map(cat.pecas.map((p) => [p.id, p]));
+  const maxPessoa = Math.max(1, ...rel.por_vendedor.map((c) => c.total));
+
+  // Gráfico: por hora (1 dia), por dia (até 14), por semana (até 70) ou por mês.
+  const validas = vendas.filter((v) => v.estado !== "anulada");
+  let barras: { l: string; v: number }[] = [];
+  let grafTitulo = "Vendido por dia";
+  if (periodo.dias === 1) {
+    grafTitulo = "Vendido por hora";
+    const h = new Map<number, number>();
+    for (const v of validas) { const x = Number(hora(v.criada_em).slice(0, 2)); h.set(x, (h.get(x) ?? 0) + v.total); }
+    const horas = Array.from(h.keys());
+    const ini = Math.min(9, ...horas), fimH = Math.max(18, ...horas);
+    for (let x = ini; x <= fimH; x++) barras.push({ l: `${x}h`, v: h.get(x) ?? 0 });
+  } else {
+    const porDia = new Map<string, number>();
+    for (const v of validas) { const d = diaIso(new Date(v.criada_em)); porDia.set(d, (porDia.get(d) ?? 0) + v.total); }
+    const dias: string[] = [];
+    for (let d = periodo.de; d <= periodo.ate; d = somarDias(d, 1)) dias.push(d);
+    if (dias.length <= 14) {
+      barras = dias.map((d) => ({ l: `${DIA[new Date(d + "T12:00:00Z").getUTCDay()]} ${Number(d.slice(8))}`, v: porDia.get(d) ?? 0 }));
+    } else if (dias.length <= 70) {
+      grafTitulo = "Vendido por semana";
+      for (let i = 0; i < dias.length; i += 7) {
+        const ch = dias.slice(i, i + 7);
+        barras.push({ l: `${Number(ch[0].slice(8))}–${diaCurto(ch[ch.length - 1])}`, v: ch.reduce((s, d) => s + (porDia.get(d) ?? 0), 0) });
+      }
+    } else {
+      grafTitulo = "Vendido por mês";
+      const m = new Map<string, number>();
+      for (const d of dias) m.set(d.slice(0, 7), (m.get(d.slice(0, 7)) ?? 0) + (porDia.get(d) ?? 0));
+      barras = Array.from(m.entries()).map(([k, v]) => ({ l: `${MES[Number(k.slice(5)) - 1]} ${k.slice(2, 4)}`, v }));
+    }
+  }
+  const maxBarra = Math.max(1, ...barras.map((b) => b.v));
+  const melhor = barras.reduce((a, b) => (b.v > a.v ? b : a), { l: "", v: 0 });
+  const curto = (v: number) => (v >= 1000000 ? `${(v / 1000000).toFixed(1).replace(".", ",")} M` : v >= 1000 ? `${Math.round(v / 100) / 10} mil`.replace(".", ",") : String(v));
+
   return (
     <div className="c-page" style={{ maxWidth: 1100 }}>
-      <PageHead title="Como correu" sub={periodo.titulo} />
+      <PageHead title="Relatórios" sub="Vendas e peças por período" />
       {abas}
-      <FiltroPeriodo base="/relatorios" periodo={periodo} />
-      <Escuro label="Vendido" valor={mt(rel.total)} lado={`${rel.vendas} ${rel.vendas === 1 ? "venda" : "vendas"}`} />
-      <div className="c-tiles" style={{ alignItems: "start" }}>
-        <div className="c-card">
-          <h2 className="c-card-t">Como pagaram</h2>
+      <FiltroPeriodo base="/relatorios" periodo={periodo} hoje={diaIso()} />
+      <div className="v-dois">
+        <div className="v-hero">
+          <div><p className="v-hero-k">Total vendido</p><p className="v-hero-v">{mt(rel.total)}</p></div>
+          <p className="v-hero-s">{rel.vendas} {rel.vendas === 1 ? "venda" : "vendas"}</p>
+        </div>
+        <div className="v-tile borda"><p className="v-tile-k">Peças vendidas</p><p className="v-tile-v">{pecasVendidas}</p><p className="v-tile-s">unidades</p></div>
+        <div className="v-tile borda"><p className="v-tile-k">Vendas</p><p className="v-tile-v">{rel.vendas}</p><p className="v-tile-s">sem contar as anuladas</p></div>
+      </div>
+      <section aria-labelledby="h-graf" className="v-sec">
+        <div className="v-sec-h"><h2 id="h-graf">{grafTitulo}</h2>{melhor.v ? <span className="muted" style={{ fontSize: 13 }}>{barras.length > 1 ? "Melhor: " : ""}{melhor.l}, {mt(melhor.v)}</span> : null}</div>
+        {rel.total === 0 ? <p className="muted" style={{ margin: 0 }}>Não houve vendas neste período.</p> : (
+          <div role="img" aria-label={`${grafTitulo}: ${barras.map((b) => `${b.l} ${mt(b.v)}`).join(", ")}`}
+            style={{ display: "flex", alignItems: "flex-end", gap: barras.length > 20 ? 3 : 8, height: 190, paddingTop: 10, overflowX: "auto" }}>
+            {barras.map((b) => (
+              <div key={b.l} style={{ flex: `1 0 ${barras.length > 20 ? 18 : 24}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
+                <span style={{ fontSize: 10, color: "var(--fraco)", whiteSpace: "nowrap", minHeight: 13 }}>{b.v && barras.length <= 14 ? curto(b.v) : ""}</span>
+                <div style={{ width: "100%", maxWidth: 44, height: `${Math.round((b.v / maxBarra) * 100)}%`, minHeight: 2, borderRadius: "5px 5px 2px 2px", background: b.v === maxBarra ? "var(--rosa-texto)" : "#e3c6d7" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>{b.l}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+      <div className="v-colunas">
+        <section aria-labelledby="h-top" className="v-sec">
+          <div className="v-sec-h"><h2 id="h-top">Peças mais vendidas</h2></div>
+          {rel.por_produto.length === 0 ? <p className="empty">Sem vendas neste período.</p> : (
+            <ol className="v-lista" style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {rel.por_produto.slice(0, 8).map((p, i) => {
+                const x = fotos.get(p.id);
+                return (
+                  <li key={p.id} className="v-row">
+                    <strong style={{ color: "var(--rosa-texto)", width: 16 }}>{i + 1}</strong>
+                    <Foto path={x?.foto} categoria={x?.categoria} alt="" size={36} />
+                    <span className="v-row-m"><span className="v-row-t">{p.nome}</span><span className="v-row-s">{p.quantidade} un.</span></span>
+                    <span className="v-row-v">{mt(p.total)}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
+        <section aria-labelledby="h-quem" className="v-sec">
+          <div className="v-sec-h"><h2 id="h-quem">Por vendedora</h2></div>
+          {rel.por_vendedor.length === 0 ? <p className="empty">Sem vendas.</p> : rel.por_vendedor.map((v) => (
+            <div key={v.nome} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div className="c-entre" style={{ fontSize: 13 }}><span><strong>{v.nome}</strong> <span className="muted">{v.vendas} {v.vendas === 1 ? "venda" : "vendas"}</span></span><strong>{mt(v.total)}</strong></div>
+              <div className="v-barra"><span style={{ width: `${Math.round((v.total / maxPessoa) * 100)}%` }} /></div>
+            </div>
+          ))}
+        </section>
+        <section aria-labelledby="h-pag" className="v-sec">
+          <div className="v-sec-h"><h2 id="h-pag">Por forma de pagamento</h2></div>
           {FORMAS.map((f) => {
             const v = rel.por_forma[f.id] ?? 0;
             return (
-              <div key={f.id} className="stack" style={{ gap: 6 }}>
-                <div className="c-entre" style={{ alignItems: "center" }}>
-                  <span style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}><span style={{ color: "var(--rosa-texto)" }}><Icon name={f.icon} size={20} /></span>{f.nome}</span>
-                  <b>{mt(v)}</b>
-                </div>
-                <div className="c-barra"><span style={{ width: `${(v / maxForma) * 100}%` }} /></div>
+              <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div className="c-entre" style={{ fontSize: 13 }}><span>{f.curto}</span><strong>{mt(v)}</strong></div>
+                <div className="v-barra"><span style={{ width: `${Math.round((v / maxForma) * 100)}%` }} /></div>
               </div>
             );
           })}
-        </div>
-        <div className="c-card">
-          <h2 className="c-card-t">Peças mais vendidas</h2>
-          {rel.por_produto.length === 0 ? <p className="empty">Sem vendas neste período.</p> : rel.por_produto.slice(0, 8).map((p, i) => {
-            const x = fotos.get(p.id);
-            return (
-              <div key={p.id} className="c-entre" style={{ alignItems: "center" }}>
-                <b style={{ color: "var(--rosa-texto)", width: 18 }}>{i + 1}</b>
-                <Foto path={x?.foto} categoria={x?.categoria} alt={p.nome} size={48} />
-                <span className="c-linha-m"><b>{p.nome}</b><span className="c-linha-s">{p.quantidade} {p.quantidade === 1 ? "vendida" : "vendidas"}</span></span>
-                <b>{mt(p.total)}</b>
-              </div>
-            );
-          })}
-        </div>
-        <div className="c-card">
-          <h2 className="c-card-t">Por vendedora</h2>
-          {rel.por_vendedor.length === 0 ? <p className="empty">Sem vendas.</p> : rel.por_vendedor.map((v) => (
-            <div key={v.nome} className="c-entre" style={{ alignItems: "center" }}>
-              <span className="c-avatar">{v.nome.charAt(0).toUpperCase()}</span>
-              <span className="c-linha-m"><b>{v.nome}</b><span className="c-linha-s">{v.vendas} {v.vendas === 1 ? "venda" : "vendas"}</span></span>
-              <b>{mt(v.total)}</b>
+        </section>
+        <section aria-labelledby="h-cat" className="v-sec">
+          <div className="v-sec-h"><h2 id="h-cat">Por tipo de peça</h2></div>
+          {rel.por_categoria.length === 0 ? <p className="empty">Sem vendas.</p> : rel.por_categoria.map((c) => (
+            <div key={c.nome} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div className="c-entre" style={{ fontSize: 13 }}><span>{c.nome}</span><strong>{mt(c.total)}</strong></div>
+              <div className="v-barra"><span style={{ width: `${Math.round((c.total / maxCat) * 100)}%` }} /></div>
             </div>
           ))}
-          <h2 className="c-card-t" style={{ marginTop: 8 }}>Por tipo de peça</h2>
-          {rel.por_categoria.map((c) => (
-            <div key={c.nome} className="stack" style={{ gap: 6 }}>
-              <div className="c-entre"><b>{c.nome}</b><b>{mt(c.total)}</b></div>
-              <div className="c-barra"><span style={{ width: `${(c.total / maxCat) * 100}%` }} /></div>
-            </div>
-          ))}
-        </div>
+        </section>
       </div>
     </div>
   );

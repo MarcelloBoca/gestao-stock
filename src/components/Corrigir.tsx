@@ -104,7 +104,7 @@ export default function Corrigir({ id, pecas, inicial, forma: formaInicial, naVe
       <div className="c-opts" style={{ ["--cols" as string]: 2 }}>
         {FORMAS.map((f) => (
           <button key={f.id} type="button" className="c-opt" style={{ minHeight: 72 }} aria-pressed={forma === f.id} onClick={() => setForma(f.id)}>
-            <Icon name={f.icon} size={24} /> {f.nome}
+            <Icon name={f.icon} size={16} /> {f.nome}
           </button>
         ))}
       </div>
@@ -113,7 +113,7 @@ export default function Corrigir({ id, pecas, inicial, forma: formaInicial, naVe
         <input id="motivo" className="input" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={300} placeholder="Ex.: registada duas vezes" />
       </div>
       {erro ? <p className="alert alert-error" role="alert">{erro}</p> : null}
-      <button type="button" className="c-cta" onClick={guardar} disabled={pending}><Icon name="certo" /> {pending ? "A guardar…" : "Guardar correcção"}</button>
+      <button type="button" className="c-cta" onClick={guardar} disabled={pending}><Icon name="certo" size={16} /> {pending ? "A guardar…" : "Guardar correcção"}</button>
     </div>
   );
 }

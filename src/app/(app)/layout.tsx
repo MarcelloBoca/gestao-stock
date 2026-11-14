@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="c-shell">
       <Sidebar perfil={user.perfil} nome={user.nome} />
       <main className="c-main">{children}</main>
-      <BottomNav perfil={user.perfil} />
+      <BottomNav perfil={user.perfil} nome={user.nome} />
     </div>
   );
 }

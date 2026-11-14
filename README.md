@@ -15,7 +15,20 @@ NEXT_PUBLIC_SUPABASE_URL=https://jmftawxiqqtlqoeckyit.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
 ```
 
+Na Vercel (só no servidor, nunca `NEXT_PUBLIC_`):
+
+```
+PIN_SECRET=…   # 32+ caracteres aleatórios; ex.: openssl rand -base64 48
+```
+
 No Supabase (segredo da função `contas`): `SETUP_CODE`, o código para criar a conta da administradora no primeiro acesso.
+
+## Entrar com PIN
+
+- No ecrã de entrada toca-se no nome e escreve-se um PIN de 4 números. Os nomes que aparecem são só os de quem já entrou **neste aparelho** (cookie `sola_pessoas`); quem nunca entrou escreve o utilizador em "Outra pessoa".
+- O PIN não é guardado: a palavra-passe da conta no Supabase passa a ser `HMAC-SHA256(PIN_SECRET, utilizador + PIN)`. Os limites de tentativas de sempre continuam (5 erradas bloqueiam a conta 10 minutos).
+- Quem ainda não tem PIN entra uma vez com a palavra-passe ("Ainda não tenho PIN") e escolhe o PIN em "Mudar o meu PIN". A administradora dá PINs em Funcionárias (contas novas ou "Dar um PIN novo").
+- **Mudar `PIN_SECRET` invalida todos os PINs.** Sem `PIN_SECRET`, a entrada com PIN fica desligada e só funciona a palavra-passe.
 
 ## Perfis
 

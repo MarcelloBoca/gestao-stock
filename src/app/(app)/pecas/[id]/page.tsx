@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GESTAO, requireUser } from "@/lib/auth";
 import { catalogo } from "@/lib/catalogo";
-import { corHex, estadoStock, nomeVariante } from "@/lib/cores";
-import { diaCurto, diaIso, hora, mt } from "@/lib/format";
-import { Foto, PageHead, Pill } from "@/components/ui";
+import { corHex, nomeVariante } from "@/lib/cores";
+import { diaCurto, diaIso, hora, inicioMes, mt } from "@/lib/format";
+import { relatorio } from "@/lib/vendas";
+import { Foto, PageHead } from "@/components/ui";
 import Icon from "@/components/Icon";
 
 export const metadata: Metadata = { title: "Peça" };
@@ -33,67 +33,93 @@ export default async function PecaPage({ params, searchParams }: { params: Promi
     .limit(20);
   const vNome = new Map(p.variantes.map((v) => [v.id, nomeVariante(v)]));
 
+  const hoje = diaIso();
+  const mes = await relatorio(sb, inicioMes(hoje), hoje).catch(() => null);
+  const vendidasMes = mes?.por_produto.find((x) => x.id === p.id)?.quantidade ?? 0;
+  const corSel = typeof sp.cor === "string" && cores.includes(sp.cor) ? sp.cor : cores.find((c) => vs.some((v) => v.cor === c && v.stock > 0)) ?? cores[0] ?? null;
+  const daCor = vs.filter((v) => v.cor === corSel).sort((a, b) => a.ordem - b.ordem);
+  const tom = (n: number) => (n <= 0 ? "zero" : n <= Math.max(1, p.stock_minimo) ? "pouco" : "ok");
+  const totalCor = (c: string | null) => vs.filter((v) => v.cor === c).reduce((x, v) => x + v.stock, 0);
+
   return (
-    <div className="c-page c-narrow" style={{ maxWidth: 760 }}>
-      <PageHead title={p.nome} back={{ href: "/pecas", label: "Peças" }} />
+    <div className="c-page" style={{ maxWidth: 1000 }}>
+      <PageHead
+        title={p.nome}
+        back={{ href: "/pecas", label: "Peças e stock" }}
+        action={<Link href={`/pecas/${p.id}/editar`} className="btn"><Icon name="lapis" size={16} /> Editar peça</Link>}
+      />
       {sp.ok ? <p className="alert alert-ok" role="status">Peça guardada.</p> : null}
       {!p.activo ? <p className="alert alert-warn">Esta peça está fora de venda.</p> : null}
-      <div className="c-entre" style={{ alignItems: "center", justifyContent: "flex-start", gap: 16 }}>
-        <Foto path={p.foto} categoria={p.categoria} alt={p.nome} size={112} />
-        <div className="stack">
-          <p className="p" style={{ fontSize: 24, fontWeight: 800 }}>{mt(p.preco)}</p>
-          <p className="p muted">{p.categoria} · {p.stock} {p.stock === 1 ? "peça" : "peças"} na loja</p>
-          <p className="p muted" style={{ fontSize: 14 }}>Avisa quando restarem {p.stock_minimo}</p>
+      <section aria-label="Resumo da peça" className="v-sec" style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "14px 20px" }}>
+        <div style={{ flex: "1 1 240px", display: "flex", gap: 14, alignItems: "center", minWidth: 0 }}>
+          <Foto path={p.foto} categoria={p.categoria} alt={p.nome} size={64} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+            <span className="muted" style={{ fontSize: 13 }}>{p.categoria}</span>
+            <span style={{ fontSize: 22, fontWeight: 700 }}>{mt(p.preco)}</span>
+            <span className="muted" style={{ fontSize: 13 }}>Avisa quando restarem {p.stock_minimo}</span>
+          </div>
         </div>
-      </div>
-      <div className="c-card">
-        <h2 className="c-card-t">Quantas há de cada</h2>
-        {tams.length ? (
-          <div className="c-tabela" style={{ gridTemplateColumns: `minmax(90px, 1.4fr) repeat(${tams.length}, minmax(0, 1fr))`, overflowX: "auto" }}>
-            <span />
-            {tams.map((t) => <span key={t} className="h">{t}</span>)}
+        <div className="v-dois" style={{ flex: "1 1 240px" }}>
+          <div className="v-tile"><p className="v-tile-k">Em stock</p><p className="v-tile-v" style={{ fontSize: 20 }}>{p.stock} {p.stock === 1 ? "unidade" : "unidades"}</p></div>
+          <div className="v-tile"><p className="v-tile-k">Vendidas este mês</p><p className="v-tile-v" style={{ fontSize: 20 }}>{vendidasMes} {vendidasMes === 1 ? "unidade" : "unidades"}</p></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-stock" className="v-sec">
+        <div className="v-sec-h">
+          <h2 id="h-stock">{tams.length ? "Stock por cor e número" : "Stock por cor"}</h2>
+          <Link href={`/mercadoria?peca=${p.id}`} className="btn btn-sm"><Icon name="lapis" size={14} /> Ajustar stock</Link>
+        </div>
+        {cores.length > 1 || (cores.length === 1 && cores[0]) ? (
+          <div role="group" aria-label="Cor" className="v-cores" style={{ gridTemplateColumns: cores.length <= 3 ? `repeat(${cores.length}, minmax(0, 1fr))` : "repeat(auto-fill, minmax(110px, 1fr))" }}>
             {cores.map((c) => (
-              <Fragment key={c ?? "sem-cor"}>
-                <span className="c">{c ? <span className="c-bolinha" style={{ background: corHex(c) }} /> : null}{c ?? "—"}</span>
-                {tams.map((t) => {
-                  const v = vs.find((x) => x.cor === c && x.tamanho === t);
-                  return <span key={`${c}-${t}`} className={`q ${v ? estadoStock(v.stock, p.stock_minimo) : "nada"}`}>{v ? v.stock : "·"}</span>;
-                })}
-              </Fragment>
+              <Link key={c ?? "sem"} href={`/pecas/${p.id}?cor=${encodeURIComponent(c ?? "")}`} scroll={false} replace className="v-cor" aria-current={c === corSel ? "true" : undefined}
+                aria-label={`${c ?? "Sem cor"}, ${totalCor(c)} ${totalCor(c) === 1 ? "unidade" : "unidades"}`}>
+                <span className="bola" style={{ background: corHex(c) }} />
+                <span className="nome">{c ?? "Sem cor"}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        {tams.length ? (
+          <div role="list" aria-label={`Stock ${corSel ? `da cor ${corSel} ` : ""}por número`} className="v-tams">
+            {daCor.map((v) => (
+              <div role="listitem" key={v.id} className={`v-tam ${tom(v.stock)}`} aria-label={`Número ${v.tamanho}: ${v.stock}`}>
+                <span className="v-tam-n">Nº {v.tamanho}</span>
+                <span className="v-tam-q">{v.stock}</span>
+              </div>
             ))}
           </div>
         ) : (
-          vs.map((v) => (
-            <div key={v.id} className="c-entre" style={{ alignItems: "center" }}>
-              <span className="c" style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}>{v.cor ? <span className="c-bolinha" style={{ background: corHex(v.cor) }} /> : null}{v.cor ?? "Peça única"}</span>
-              <Pill tone={estadoStock(v.stock, p.stock_minimo)}>{v.stock}</Pill>
-            </div>
-          ))
+          <div className="v-tams">
+            {daCor.map((v) => (
+              <div key={v.id} className={`v-tam ${tom(v.stock)}`}><span className="v-tam-n">{v.cor ?? "Peça única"}</span><span className="v-tam-q">{v.stock}</span></div>
+            ))}
+          </div>
         )}
-        <div className="c-chips" style={{ gap: 6 }}>
-          <Pill tone="zero">0 = acabou</Pill><Pill tone="pouco">a acabar</Pill><Pill tone="ok">tudo bem</Pill>
-        </div>
-      </div>
-      <Link href={`/mercadoria?peca=${p.id}`} className="c-cta"><Icon name="caixa" /> Chegou mercadoria desta peça</Link>
-      <div className="inline" style={{ flexWrap: "nowrap" }}>
-        <Link href={`/pecas/${p.id}/editar`} className="c-outline"><Icon name="preco" size={22} /> Mudar preço</Link>
-        <Link href={`/pecas/${p.id}/editar`} className="c-outline"><Icon name="lapis" size={22} /> Editar peça</Link>
-      </div>
-      <div className="c-card">
-        <h2 className="c-card-t">Histórico</h2>
-        {(movs ?? []).length === 0 ? <p className="empty">Ainda sem movimentos.</p> : (movs ?? []).map((m) => {
-          const quem = (m.utilizadores as unknown as { nome: string } | null)?.nome ?? "";
-          return (
-            <div key={m.id} className="c-entre" style={{ alignItems: "center", paddingBottom: 10, borderBottom: "1px solid var(--linha)" }}>
-              <div className="c-linha-m">
-                <span style={{ fontWeight: 800 }}>{TIPO[m.tipo] ?? m.tipo}{vNome.get(m.variante_id) ? ` · ${vNome.get(m.variante_id)}` : ""}</span>
-                <span className="c-linha-s">{diaCurto(diaIso(new Date(m.criado_em)))}, {hora(m.criado_em)} · {quem}{m.motivo ? ` · ${m.motivo}` : ""}</span>
-              </div>
-              <b style={{ color: m.quantidade > 0 ? "var(--paga)" : "var(--porpagar)", fontSize: 17 }}>{m.quantidade > 0 ? `+${m.quantidade}` : `−${Math.abs(m.quantidade)}`}</b>
-            </div>
-          );
-        })}
-      </div>
+        <p className="hint">Verde: há bastantes. Âmbar: a acabar. Cinzento: esgotado.</p>
+      </section>
+
+      <section aria-labelledby="h-mov" className="v-sec">
+        <div className="v-sec-h"><h2 id="h-mov">Movimentos</h2></div>
+        {(movs ?? []).length === 0 ? <p className="empty">Ainda sem movimentos.</p> : (
+          <div className="v-lista">
+            {(movs ?? []).map((m) => {
+              const quem = (m.utilizadores as unknown as { nome: string } | null)?.nome ?? "";
+              return (
+                <div key={m.id} className="v-row" style={{ minHeight: 44 }}>
+                  <span className="v-row-h" style={{ width: 52 }}>{diaIso(new Date(m.criado_em)) === hoje ? hora(m.criado_em) : diaCurto(diaIso(new Date(m.criado_em)))}</span>
+                  <span className="v-row-m">
+                    <span className="v-row-t" style={{ fontWeight: 500, whiteSpace: "normal" }}>{TIPO[m.tipo] ?? m.tipo}{vNome.get(m.variante_id) ? `, ${vNome.get(m.variante_id)}` : ""}</span>
+                    <span className="v-row-s">{quem}{m.motivo ? `, ${m.motivo}` : ""}</span>
+                  </span>
+                  <strong style={{ color: m.quantidade > 0 ? "var(--paga)" : "var(--porpagar)", fontSize: 14 }}>{m.quantidade > 0 ? `+${m.quantidade}` : `−${Math.abs(m.quantidade)}`}</strong>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
