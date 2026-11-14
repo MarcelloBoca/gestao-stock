@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GESTAO, requireUser } from "@/lib/auth";
-import { catalogo } from "@/lib/catalogo";
+import { catalogo, lucroEstimado } from "@/lib/catalogo";
 import { diaCurto, diaIso, hora, mt, somarDias } from "@/lib/format";
 import { lerPeriodo } from "@/lib/periodo";
 import { FORMAS } from "@/lib/types";
 import { listarVendas, relatorio } from "@/lib/vendas";
-import { Escuro, Foto, PageHead } from "@/components/ui";
+import { Escuro, Foto, LucroTile, PageHead } from "@/components/ui";
 import { FiltroPeriodo } from "@/components/FiltroPeriodo";
 
 export const metadata: Metadata = { title: "Relatórios" };
@@ -117,7 +117,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           <p className="v-hero-s">{rel.vendas} {rel.vendas === 1 ? "venda" : "vendas"}</p>
         </div>
         <div className="v-tile borda"><p className="v-tile-k">Peças vendidas</p><p className="v-tile-v">{pecasVendidas}</p><p className="v-tile-s">unidades</p></div>
-        <div className="v-tile borda"><p className="v-tile-k">Vendas</p><p className="v-tile-v">{rel.vendas}</p><p className="v-tile-s">sem contar as anuladas</p></div>
+        <LucroTile {...lucroEstimado(rel.por_produto, cat.pecas)} borda />
       </div>
       <section aria-labelledby="h-graf" className="v-sec">
         <div className="v-sec-h"><h2 id="h-graf">{grafTitulo}</h2>{melhor.v ? <span className="muted" style={{ fontSize: 13 }}>{barras.length > 1 ? "Melhor: " : ""}{melhor.l}, {mt(melhor.v)}</span> : null}</div>

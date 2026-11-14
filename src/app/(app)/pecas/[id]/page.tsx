@@ -56,7 +56,7 @@ export default async function PecaPage({ params, searchParams }: { params: Promi
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             <span className="muted" style={{ fontSize: 13 }}>{p.categoria}</span>
             <span style={{ fontSize: 22, fontWeight: 700 }}>{mt(p.preco)}</span>
-            <span className="muted" style={{ fontSize: 13 }}>Avisa quando restarem {p.stock_minimo}</span>
+            <span className="muted" style={{ fontSize: 13 }}>{p.custo !== null ? `Custo ${mt(p.custo)}, margem ${mt(p.preco - p.custo)}` : "Sem custo registado"}. Avisa quando restarem {p.stock_minimo}.</span>
           </div>
         </div>
         <div className="v-dois" style={{ flex: "1 1 240px" }}>

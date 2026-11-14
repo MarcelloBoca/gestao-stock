@@ -19,6 +19,8 @@ export function descrever(accao: string, antes: J, depois: J): { etiqueta: strin
       return { etiqueta: TIPO[depois?.tipo] ?? "Stock", tom: "ok", texto: `${depois?.peca}: ${depois?.quantidade > 0 ? "+" : "−"}${Math.abs(depois?.quantidade ?? 0)} (fica com ${depois?.stock}).${depois?.motivo ? ` Motivo: ${depois.motivo}.` : ""}` };
     case "preco_alterado":
       return { etiqueta: "Preço alterado", tom: "rosa", texto: `${depois?.nome}: de ${mt(antes?.preco_venda)} para ${mt(depois?.preco_venda)}.` };
+    case "custo_alterado":
+      return { etiqueta: "Custo alterado", tom: "rosa", texto: `${depois?.peca}: ${antes?.custo === null || antes?.custo === undefined ? "sem custo" : mt(antes.custo)} para ${depois?.custo === null || depois?.custo === undefined ? "sem custo" : mt(depois.custo)}.` };
     case "produto_criado":
       return { etiqueta: "Peça nova", tom: "rosa", texto: `${depois?.nome} · ${mt(depois?.preco_venda)}.` };
     case "produto_editado":
@@ -26,7 +28,7 @@ export function descrever(accao: string, antes: J, depois: J): { etiqueta: strin
     case "conta_criada":
       return { etiqueta: "Conta criada", tom: "cinza", texto: `${depois?.nome} (${depois?.username}), ${PERFIS[depois?.perfil as Perfil]?.toLowerCase() ?? depois?.perfil}.` };
     case "senha_reposta":
-      return { etiqueta: "Senha nova", tom: "cinza", texto: `Palavra-passe de ${depois?.username} reposta.` };
+      return { etiqueta: "PIN novo", tom: "cinza", texto: `PIN (ou palavra-passe) de ${depois?.username} reposto.` };
     case "perfil_mudado":
       return { etiqueta: "Função mudada", tom: "cinza", texto: `De ${PERFIS[antes?.perfil as Perfil] ?? antes?.perfil} para ${PERFIS[depois?.perfil as Perfil] ?? depois?.perfil}.` };
     case "conta_desactivada":
@@ -45,6 +47,6 @@ export function descrever(accao: string, antes: J, depois: J): { etiqueta: strin
 export const GRUPOS: Record<string, string[]> = {
   vendas: ["venda_registada", "venda_corrigida", "venda_anulada"],
   stock: ["movimento_stock"],
-  precos: ["preco_alterado", "produto_criado", "produto_editado"],
+  precos: ["preco_alterado", "custo_alterado", "produto_criado", "produto_editado"],
   contas: ["conta_criada", "senha_reposta", "perfil_mudado", "conta_desactivada", "conta_activada", "nome_mudado"],
 };

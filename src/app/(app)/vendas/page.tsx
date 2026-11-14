@@ -5,7 +5,8 @@ import { diaCurto, diaIso, hora, mt } from "@/lib/format";
 import { lerPeriodo } from "@/lib/periodo";
 import { FORMAS, nomeForma } from "@/lib/types";
 import { descricao, linhasActivas, listarVendas, relatorio } from "@/lib/vendas";
-import { PageHead } from "@/components/ui";
+import { LucroTile, PageHead } from "@/components/ui";
+import { catalogo, lucroEstimado } from "@/lib/catalogo";
 import { EstadoPill } from "@/components/VendaUi";
 import { FiltroPeriodo } from "@/components/FiltroPeriodo";
 
@@ -22,10 +23,11 @@ export default async function VendasPage({ searchParams }: { searchParams: Promi
   const estado = typeof sp.estado === "string" && ["normal", "corrigida", "anulada"].includes(sp.estado) ? sp.estado : "";
   const vendedor = typeof sp.vendedor === "string" && /^[0-9a-f-]{36}$/i.test(sp.vendedor) ? sp.vendedor : "";
   const forma = typeof sp.forma === "string" && FORMAS.some((f) => f.id === sp.forma) ? sp.forma : "";
-  const [todas, rel, pessoas] = await Promise.all([
+  const [todas, rel, pessoas, cat] = await Promise.all([
     listarVendas(sb, periodo.de, periodo.ate, { estado: estado || undefined, vendedor: vendedor || undefined, limite: 500 }),
     relatorio(sb, periodo.de, periodo.ate),
     sb.from("utilizadores").select("id, nome").order("nome"),
+    catalogo(sb),
   ]);
   const vendas = forma ? todas.filter((v) => v.forma === forma) : todas;
   const validas = vendas.filter((v) => v.estado !== "anulada");
@@ -33,6 +35,14 @@ export default async function VendasPage({ searchParams }: { searchParams: Promi
   const total = filtrado ? validas.reduce((s, v) => s + v.total, 0) : rel.total;
   const nVendas = filtrado ? validas.length : rel.vendas;
   const pecas = validas.reduce((s, v) => s + linhasActivas(v).reduce((a, l) => a + l.quantidade, 0), 0);
+  const porPeca = new Map<string, { id: string; quantidade: number; total: number }>();
+  for (const v of validas) for (const l of linhasActivas(v)) {
+    const x = porPeca.get(l.produto_id) ?? { id: l.produto_id, quantidade: 0, total: 0 };
+    x.quantidade += l.quantidade;
+    x.total += l.subtotal;
+    porPeca.set(l.produto_id, x);
+  }
+  const lucro = lucroEstimado(filtrado ? Array.from(porPeca.values()) : rel.por_produto, cat.pecas);
   const curto = periodo.p === "hoje" || periodo.p === "ontem" || periodo.de === periodo.ate;
 
   return (
@@ -54,7 +64,7 @@ export default async function VendasPage({ searchParams }: { searchParams: Promi
           <p className="v-hero-s">{nVendas} {nVendas === 1 ? "venda" : "vendas"}</p>
         </div>
         <div className="v-tile borda"><p className="v-tile-k">Peças vendidas</p><p className="v-tile-v">{pecas}</p><p className="v-tile-s">unidades</p></div>
-        <div className="v-tile borda"><p className="v-tile-k">Anuladas</p><p className="v-tile-v">{vendas.length - validas.length}</p><p className="v-tile-s">não contam no total</p></div>
+        <LucroTile {...lucro} borda />
       </div>
       <section aria-labelledby="h-lista" className="v-sec">
         <div className="v-sec-h"><h2 id="h-lista">{TITULO[periodo.p]}</h2><span className="muted" style={{ fontSize: 13 }}>{vendas.length === 1 ? "1 venda" : `${vendas.length} vendas`}</span></div>

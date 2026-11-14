@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Variante = { id: string; tamanho: string | null; tamanho_id: string | null; ordem: number; cor: string | null; cor_id: string | null; stock: number; activa: boolean };
 export type Peca = {
-  id: string; nome: string; preco: number; stock_minimo: number; activo: boolean; foto: string | null;
+  id: string; nome: string; preco: number; custo: number | null; stock_minimo: number; activo: boolean; foto: string | null;
   categoria_id: string; categoria: string; categoria_activa: boolean; variantes: Variante[]; stock: number;
 };
 export type Lista = { id: string; nome: string; ordem?: number };
@@ -21,6 +21,9 @@ export async function catalogo(sb: SupabaseClient, soAVenda = false): Promise<{ 
     sb.from("categorias").select("id, nome, activa").order("nome"),
   ]);
   for (const r of [p, v, s, t, c, cat]) if (r.error) throw r.error;
+  // Custos: só a gestora e a administradora os conseguem ler (regras da tabela). Para as outras, fica vazio.
+  const cu = await sb.from("custos_produtos").select("produto_id, custo");
+  const custos = new Map(((cu.error ? [] : cu.data) as Row[]).map((x) => [x.produto_id as string, Number(x.custo)]));
   const tam = new Map((t.data as Row[]).map((x) => [x.id as string, x]));
   const cor = new Map((c.data as Row[]).map((x) => [x.id as string, x]));
   const cats = new Map((cat.data as Row[]).map((x) => [x.id as string, x]));
@@ -40,7 +43,7 @@ export async function catalogo(sb: SupabaseClient, soAVenda = false): Promise<{ 
     const cc = cats.get(x.categoria_id as string);
     const vs = (porProduto.get(x.id as string) ?? []).sort((a, b) => (a.cor ?? "").localeCompare(b.cor ?? "") || a.ordem - b.ordem);
     return {
-      id: x.id as string, nome: x.nome as string, preco: Number(x.preco_venda), stock_minimo: Number(x.stock_minimo ?? 0),
+      id: x.id as string, nome: x.nome as string, preco: Number(x.preco_venda), custo: custos.get(x.id as string) ?? null, stock_minimo: Number(x.stock_minimo ?? 0),
       activo: Boolean(x.activo), foto: (x.foto_path as string) ?? null, categoria_id: x.categoria_id as string,
       categoria: (cc?.nome as string) ?? "", categoria_activa: Boolean(cc?.activa ?? true), variantes: vs,
       stock: vs.filter((y) => y.activa).reduce((sum, y) => sum + y.stock, 0),
@@ -72,5 +75,23 @@ export function aRepor(pecas: Peca[]) {
 
 /** A peça está a acabar quando alguma cor/número ainda tem stock mas já não passa do mínimo (esgotadas não contam). */
 export const pecaAAcabar = (p: Peca) => p.activo && p.variantes.some((v) => v.activa && v.stock > 0 && v.stock <= Math.max(1, p.stock_minimo));
+
+/**
+ * Lucro estimado: o que se vendeu menos o custo actual de cada peça vendida.
+ * As peças sem custo registado não entram (e são contadas à parte, para o mostrar).
+ */
+export function lucroEstimado(vendido: { id: string; quantidade: number; total: number }[], pecas: Peca[]) {
+  const custo = new Map(pecas.map((p) => [p.id, p.custo]));
+  let lucro = 0;
+  let semCusto = 0;
+  let comCusto = 0;
+  for (const v of vendido) {
+    const c = custo.get(v.id);
+    if (c === null || c === undefined) { semCusto += 1; continue; }
+    comCusto += 1;
+    lucro += v.total - v.quantidade * c;
+  }
+  return { lucro: Math.round(lucro * 100) / 100, semCusto, comCusto };
+}
 
 export { nomeVariante } from "./cores";

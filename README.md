@@ -23,6 +23,11 @@ PIN_SECRET=…   # 32+ caracteres aleatórios; ex.: openssl rand -base64 48
 
 No Supabase (segredo da função `contas`): `SETUP_CODE`, o código para criar a conta da administradora no primeiro acesso.
 
+## Custo e lucro estimado
+
+- O custo de cada peça fica na tabela `custos_produtos` (migração em `supabase/migrations/20261114_custos_produtos.sql`). Só a gestora e a administradora o lêem; muda-se pela função `definir_custo`, que fica no registo de acções.
+- Lucro estimado = vendido − quantidade × custo actual de cada peça. As peças vendidas sem custo não entram e são assinaladas.
+
 ## Entrar com PIN
 
 - No ecrã de entrada toca-se no nome e escreve-se um PIN de 4 números. Os nomes que aparecem são só os de quem já entrou **neste aparelho** (cookie `sola_pessoas`); quem nunca entrou escreve o utilizador em "Outra pessoa".

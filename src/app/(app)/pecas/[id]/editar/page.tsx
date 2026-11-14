@@ -24,7 +24,7 @@ export default async function EditarPecaPage({ params }: { params: Promise<{ id:
         cores={cores}
         tamanhos={tamanhos}
         inicial={{
-          id: p.id, nome: p.nome, categoria_id: p.categoria_id, preco: p.preco, minimo: p.stock_minimo, foto: p.foto, activo: p.activo,
+          id: p.id, nome: p.nome, categoria_id: p.categoria_id, preco: p.preco, custo: p.custo, minimo: p.stock_minimo, foto: p.foto, activo: p.activo,
           cores: Array.from(new Set(activas.map((v) => v.cor_id).filter(Boolean))) as string[],
           tamanhos: Array.from(new Set(activas.map((v) => v.tamanho_id).filter(Boolean))) as string[],
         }}

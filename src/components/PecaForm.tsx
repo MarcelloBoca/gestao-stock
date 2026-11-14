@@ -8,7 +8,7 @@ import { corHex } from "@/lib/cores";
 import { fotoUrl } from "@/lib/supabase/config";
 import type { Lista } from "@/lib/catalogo";
 
-type Inicial = { id?: string; nome?: string; categoria_id?: string; preco?: number; minimo?: number; foto?: string | null; activo?: boolean; cores?: string[]; tamanhos?: string[] };
+type Inicial = { id?: string; nome?: string; categoria_id?: string; preco?: number; custo?: number | null; minimo?: number; foto?: string | null; activo?: boolean; cores?: string[]; tamanhos?: string[] };
 
 /** As quatro cores mais usadas ficam sempre à mão; as outras procuram-se. */
 const FIXAS = ["Preto", "Branco", "Nude", "Castanho"];
@@ -34,6 +34,7 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
   const [preview, setPreview] = useState<string | null>(fotoUrl(inicial.foto));
   const [nome, setNome] = useState(inicial.nome ?? "");
   const [preco, setPreco] = useState(inicial.preco ? String(inicial.preco) : "");
+  const [custo, setCusto] = useState(inicial.custo !== null && inicial.custo !== undefined ? String(inicial.custo) : "");
   const [cat, setCat] = useState(inicial.categoria_id ?? categorias[0]?.id ?? "");
   const porNome = useMemo(() => new Map(cores.map((c) => [norm(c.nome), c])), [cores]);
   const [escolhidas, setEscolhidas] = useState<string[]>(() => {
@@ -81,6 +82,9 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
   const nTams = opcoes.filter((t) => tams.has(t.id)).length;
   const todos = opcoes.length > 0 && nTams === opcoes.length;
 
+  const num = (t: string) => { const n = Number(t.replace(/\s/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return t.trim() && Number.isFinite(n) ? n : null; };
+  const pv = num(preco), cv = num(custo);
+  const margem = pv && cv !== null && pv > 0 ? { valor: pv - cv, texto: `${String(Math.round(pv - cv)).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} MT`, pct: Math.round(((pv - cv) / pv) * 100) } : null;
   const falta: string[] = [];
   if (!nome.trim()) falta.push("o nome");
   if (!(Number(preco.replace(/[^\d.,]/g, "").replace(",", ".")) > 0)) falta.push("o preço");
@@ -146,9 +150,16 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
                   aria-invalid={tentou && falta.includes("o preço") ? true : undefined} style={tentou && falta.includes("o preço") ? { borderColor: "var(--porpagar)" } : undefined} />
               </div>
               <div className="field">
-                <label className="label" htmlFor="minimo">Avisar quando restarem</label>
-                <input id="minimo" name="minimo" className="input" type="number" min={0} max={999} defaultValue={inicial.minimo ?? 1} />
+                <label className="label" htmlFor="custo">Custo (MT)</label>
+                <input id="custo" name="custo" className="input" inputMode="decimal" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0" />
               </div>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: margem === null ? "var(--fraco)" : margem.valor > 0 ? "var(--paga)" : "var(--porpagar)" }}>
+              {margem === null ? "Escreva o preço e o custo para ver a margem (serve para o lucro estimado)." : margem.valor > 0 ? `Margem: ${margem.texto} por peça (${margem.pct}%)` : "O custo é igual ou maior que o preço de venda."}
+            </span>
+            <div className="field" style={{ maxWidth: 220 }}>
+              <label className="label" htmlFor="minimo">Avisar quando restarem</label>
+              <input id="minimo" name="minimo" className="input" type="number" min={0} max={999} defaultValue={inicial.minimo ?? 1} />
             </div>
           </section>
         </div>

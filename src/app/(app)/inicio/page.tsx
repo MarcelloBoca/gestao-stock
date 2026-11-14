@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GESTAO, requireUser } from "@/lib/auth";
-import { catalogo, pecaAAcabar } from "@/lib/catalogo";
+import { catalogo, lucroEstimado, pecaAAcabar } from "@/lib/catalogo";
 import { diaIso, diaLongo, hora, mt, somarDias } from "@/lib/format";
 import { listarVendas, relatorio, descricao } from "@/lib/vendas";
 import { FORMAS, nomeForma } from "@/lib/types";
 import Icon from "@/components/Icon";
-import { PageHead } from "@/components/ui";
+import { LucroTile, PageHead } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Início" };
 export const dynamic = "force-dynamic";
@@ -64,11 +64,7 @@ export default async function InicioPage() {
             <dd className="v-tile-v" style={{ margin: 0 }}>{pecasVendidas}</dd>
             <dd className="v-tile-s" style={{ margin: 0 }}>em {rel.vendas} {rel.vendas === 1 ? "venda" : "vendas"}</dd>
           </div>
-          <div className="v-tile">
-            <dt className="v-tile-k">Vendas</dt>
-            <dd className="v-tile-v" style={{ margin: 0 }}>{rel.vendas}</dd>
-            <dd className="v-tile-s" style={{ margin: 0 }}>{rel.vendas ? "registadas hoje" : "ainda nenhuma"}</dd>
-          </div>
+          <LucroTile {...lucroEstimado(rel.por_produto, cat.pecas)} />
         </dl>
       </section>
 
