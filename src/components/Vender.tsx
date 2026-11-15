@@ -173,7 +173,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                 <input id="procura" type="search" placeholder="Procurar peça" value={q} onChange={(e) => setQ(e.target.value)} />
               </label>
               <button type="button" className="btn v-btn-filtros" aria-expanded={verFiltros} aria-controls="painel-filtros" onClick={() => setVerFiltros((v) => !v)}>
-                <Icon name="filtro" size={16} /> Filtros{activos.filter((f) => f.k !== "cat").length ? <span className="v-conta">{activos.filter((f) => f.k !== "cat").length}</span> : null}
+                <Icon name="filtro" size={16} /> Filtros{activos.length ? <span className="v-conta">{activos.length}</span> : null}
               </button>
             </div>
           </div>
@@ -186,6 +186,16 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                   <strong style={{ fontSize: 18 }}>Filtros</strong>
                   <button type="button" className="btn btn-text btn-sm" onClick={limparFiltros}>Limpar tudo</button>
                 </div>
+                {categorias.length > 1 ? (
+                  <div className="v-filtro-g">
+                    <p className="c-rot">Tipo de peça</p>
+                    <div className="c-chips">
+                      {categorias.map((c) => (
+                        <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "" : c)}>{c}</button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {numeros.length ? (
                   <div className="v-filtro-g">
                     <p className="c-rot">Número / tamanho</p>
@@ -227,17 +237,9 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
             </div>
           ) : null}
           </div>
-          {categorias.length > 1 ? (
-            <div className="v-cats" role="group" aria-label="Tipo de peça">
-              <button type="button" className="c-chip" aria-pressed={!cat} onClick={() => setCat("")}>Todas</button>
-              {categorias.map((c) => (
-                <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "" : c)}>{c}</button>
-              ))}
-            </div>
-          ) : null}
-          {activos.filter((f) => f.k !== "cat").length ? (
+          {activos.length ? (
             <div className="c-chips" aria-label="Filtros ligados">
-              {activos.filter((f) => f.k !== "cat").map((f) => (
+              {activos.map((f) => (
                 <button key={f.k} type="button" className="c-chip v-tag" onClick={f.tirar} aria-label={`Tirar filtro ${f.t}`}>
                   {f.t} <Icon name="x" size={14} />
                 </button>
