@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./v2.css";
 
 const serif = DM_Serif_Display({ subsets: ["latin"], weight: "400", variable: "--font-serif", display: "swap" });
 const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2B1C27",
+  themeColor: "#F7F2F5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

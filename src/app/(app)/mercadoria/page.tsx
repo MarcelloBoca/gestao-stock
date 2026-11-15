@@ -14,8 +14,8 @@ export default async function MercadoriaPage({ searchParams }: { searchParams: P
   const activas = pecas.filter((p) => p.activo).map((p) => ({ ...p, variantes: p.variantes.filter((v) => v.activa) })).filter((p) => p.variantes.length);
   return (
     <div className="c-page c-narrow" style={{ maxWidth: 680 }}>
-      <PageHead title="O que aconteceu?" sub="Entradas, devoluções, defeitos e acertos de contagem." />
-      {activas.length ? <Movimento pecas={activas} inicial={sp.peca} /> : <p className="empty">Ainda não há peças. Registe primeiro em Peças e stock → Nova peça.</p>}
+      <PageHead title="Chegou mercadoria" sub="Entradas, devoluções, defeitos e acertos de contagem." />
+      {activas.length ? <section className="v-sec"><Movimento pecas={activas} inicial={sp.peca} /></section> : <p className="empty">Ainda não há peças. Registe primeiro em Peças e stock → Nova peça.</p>}
     </div>
   );
 }

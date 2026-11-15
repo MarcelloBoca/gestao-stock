@@ -34,10 +34,20 @@ const P: Record<string, string> = {
   utilizador: '<circle cx="12" cy="8" r="4"/><path d="M4 20.5a8 8 0 0 1 16 0"/>',
   cadeado: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   olho: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  filtro: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  ordenar: '<path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/>',
+  imagem: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8.5 8.5"/>',
+  telefone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  coracao: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  casa: '<path d="M4 10.5L12 4l8 6.5V20h-5v-6H9v6H4z"/>',
+  camiao: '<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 18.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM17.5 18.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>',
+  exportar: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/>',
+  pontos: '<path d="M5 12h.01M12 12h.01M19 12h.01"/>',
+  joia: '<circle cx="12" cy="14.5" r="5.5"/><path d="M9.5 4h5l1.5 2-4 3-4-3z"/>',
   olhoNao: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/>',
 };
 
-export default function Icon({ name, size = 24, stroke = 2, className }: { name: string; size?: number; stroke?: number; className?: string }) {
+export default function Icon({ name, size = 18, stroke = 2, className }: { name: string; size?: number; stroke?: number; className?: string }) {
   return (
     <svg
       aria-hidden="true"
@@ -59,7 +69,8 @@ export default function Icon({ name, size = 24, stroke = 2, className }: { name:
 /** Ícone da categoria (para as peças sem foto). */
 export function iconeCategoria(nome: string | null | undefined): string {
   const n = (nome ?? "").toLowerCase();
-  if (n.includes("bols") || n.includes("acess") || n.includes("cartei")) return "bolsa";
+  if (n.includes("acess") || n.includes("joia") || n.includes("brinc")) return "joia";
+  if (n.includes("bols") || n.includes("cartei")) return "bolsa";
   if (n.includes("roup") || n.includes("vest") || n.includes("blus")) return "roupa";
   return "sapato";
 }

@@ -13,9 +13,9 @@ const TIPOS = ["entrada", "devolucao", "defeito", "ajuste"];
 /** ST-02/ST-03: criar ou editar uma peça, com foto e variantes de cor e número. */
 export async function guardarPeca(_prev: ActionState, fd: FormData): Promise<ActionState> {
   let id = "";
+  const existente = String(fd.get("id") ?? "");
   try {
     const { sb } = await requireUser(GESTAO);
-    const existente = String(fd.get("id") ?? "");
     const nome = String(fd.get("nome") ?? "").trim().slice(0, 120);
     const categoria = String(fd.get("categoria") ?? "");
     const preco = parseMT(String(fd.get("preco") ?? ""));
@@ -24,6 +24,9 @@ export async function guardarPeca(_prev: ActionState, fd: FormData): Promise<Act
     if (!nome) return { error: "Escreva o nome da peça." };
     if (!uuid(categoria)) return { error: "Escolha o tipo de peça." };
     if (!preco || preco <= 0) return { error: "Escreva o preço (maior que zero)." };
+    const custoTxt = String(fd.get("custo") ?? "").trim();
+    const custo = custoTxt ? parseMT(custoTxt) : null;
+    if (custoTxt && (custo === null || custo < 0)) return { error: "O custo não é válido. Escreva só o valor (ex.: 1300)." };
 
     // cores e números novos escritos à mão
     let cores = fd.getAll("cor").map(String).filter(uuid);
@@ -62,11 +65,15 @@ export async function guardarPeca(_prev: ActionState, fd: FormData): Promise<Act
     });
     if (error) return { error: mensagemErro(error) };
     id = data as string;
+    if (fd.has("custo")) {
+      const { error: e2 } = await sb.rpc("definir_custo", { p_produto: id, p_custo: custo });
+      if (e2) return { error: `A peça foi guardada, mas o custo não: ${mensagemErro(e2)}` };
+    }
     revalidatePath("/", "layout");
   } catch (e) {
     return { error: mensagemErro(e) };
   }
-  redirect(`/pecas/${id}?ok=1`);
+  redirect(`/pecas/${id}?ok=1${uuid(existente) ? "" : "&nova=1"}`);
 }
 
 /** ST-04/ST-05: chegou mercadoria, devolução, defeito ou acerto de contagem. */

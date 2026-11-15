@@ -16,13 +16,16 @@ function linhasValidas(linhas: unknown): Linha[] {
 }
 
 /** VD-01..VD-04: confirmar a venda; a base de dados verifica o stock e baixa-o na mesma transacção. */
-export async function registarVenda(forma: string, linhas: Linha[]): Promise<ActionState> {
+export async function registarVenda(forma: string, linhas: Linha[], cliente?: { nome?: string; contacto?: string }): Promise<ActionState> {
   try {
     const { sb } = await requireUser();
     if (!formaValida(forma)) return { error: "Escolha como o cliente pagou." };
     const ls = linhasValidas(linhas);
     if (!ls.length) return { error: "O cesto está vazio." };
-    const { data, error } = await sb.rpc("registar_venda", { p_forma: forma, p_linhas: ls });
+    const nome = String(cliente?.nome ?? "").trim().slice(0, 80);
+    const contacto = String(cliente?.contacto ?? "").trim().slice(0, 30);
+    if (contacto && contacto.replace(/\D/g, "").length < 9) return { error: "O contacto do cliente parece incompleto (ex.: 84 123 4567). Pode deixá-lo em branco." };
+    const { data, error } = await sb.rpc("registar_venda", { p_forma: forma, p_linhas: ls, p_cliente_nome: nome || null, p_cliente_contacto: contacto || null });
     if (error) return { error: mensagemErro(error) };
     revalidatePath("/", "layout");
     return { ok: true, data: { id: data as string } };

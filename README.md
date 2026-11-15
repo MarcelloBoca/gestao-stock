@@ -15,7 +15,30 @@ NEXT_PUBLIC_SUPABASE_URL=https://jmftawxiqqtlqoeckyit.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
 ```
 
+Na Vercel (só no servidor, nunca `NEXT_PUBLIC_`):
+
+```
+PIN_SECRET=…   # 32+ caracteres aleatórios; ex.: openssl rand -base64 48
+```
+
 No Supabase (segredo da função `contas`): `SETUP_CODE`, o código para criar a conta da administradora no primeiro acesso.
+
+## Custo e lucro estimado
+
+- O custo de cada peça fica na tabela `custos_produtos` (migração em `supabase/migrations/20261114_custos_produtos.sql`). Só a gestora e a administradora o lêem; muda-se pela função `definir_custo`, que fica no registo de acções.
+- Lucro estimado = vendido − quantidade × custo actual de cada peça. As peças vendidas sem custo não entram e são assinaladas.
+
+## Clientes
+
+- Na venda há dois campos opcionais: nome e contacto do cliente. A base de dados junta o cliente pelo contacto (ou pelo nome, se não houver contacto) na tabela `clientes` (migração `supabase/migrations/20261115_clientes.sql`); `registar_venda` ganhou `p_cliente_nome` e `p_cliente_contacto`.
+- Só a gestora e a administradora vêem a lista (menu Clientes). Lá escreve-se uma mensagem com `{nome}` e o botão WhatsApp de cada cliente abre a conversa com a mensagem pronta (link `wa.me`). Quem não quer mensagens fica marcado e deixa de aparecer em "Com WhatsApp".
+
+## Entrar com PIN
+
+- No ecrã de entrada toca-se no nome e escreve-se um PIN de 4 números. Os nomes que aparecem são só os de quem já entrou **neste aparelho** (cookie `sola_pessoas`); quem nunca entrou escreve o utilizador em "Outra pessoa".
+- O PIN não é guardado: a palavra-passe da conta no Supabase passa a ser `HMAC-SHA256(PIN_SECRET, utilizador + PIN)`. Os limites de tentativas de sempre continuam (5 erradas bloqueiam a conta 10 minutos).
+- Quem ainda não tem PIN entra uma vez com a palavra-passe ("Ainda não tenho PIN") e escolhe o PIN em "Mudar o meu PIN". A administradora dá PINs em Funcionárias (contas novas ou "Dar um PIN novo").
+- **Mudar `PIN_SECRET` invalida todos os PINs.** Sem `PIN_SECRET`, a entrada com PIN fica desligada e só funciona a palavra-passe.
 
 ## Perfis
 
