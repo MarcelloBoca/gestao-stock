@@ -464,3 +464,27 @@ input, select, textarea, .input, .select, .textarea, .c-procura input, .v-campo-
 .v-foto-ver { display: flex; gap: 12px; align-items: center; margin-bottom: 4px; }
 .v-foto-ver img { width: 96px; height: 96px; flex: none; border-radius: 12px; object-fit: cover; border: 1px solid var(--linha); }
 .v-foto-ver-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+
+/* Vender: filtros (folha em baixo no telemóvel, caixa no computador) */
+.v-btn-filtros { flex: none; gap: 6px; }
+.v-btn-filtros[aria-expanded="true"], .v-btn-filtros:has(.v-conta) { background: var(--ameixa); border-color: var(--ameixa); color: #fff; }
+.v-conta { min-width: 20px; height: 20px; border-radius: 999px; background: #fff; color: var(--ameixa); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; }
+.v-painel-caixa { display: flex; flex-direction: column; gap: 14px; background: #fff; }
+.v-filtro-g { display: flex; flex-direction: column; gap: 8px; }
+.v-filtro-g .c-rot { margin: 0; }
+@media (max-width: 899px) {
+  .v-painel-filtros { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(43, 28, 39, 0.35); }
+  .v-painel-caixa { border-radius: 20px 20px 0 0; padding: 8px 16px calc(env(safe-area-inset-bottom) + 16px); max-height: 88dvh; overflow-y: auto; }
+}
+@media (min-width: 900px) {
+  .v-so-tel { display: none !important; }
+  .v-painel-caixa { border: 1px solid var(--linha); border-radius: 14px; padding: 16px; }
+  .v-painel-caixa > .btn-primary { display: none; }
+}
+.v-row-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; min-height: 52px; }
+.v-row-link:hover { color: inherit; }
+.v-row-accao {
+  flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--linha); background: #fff;
+  display: flex; align-items: center; justify-content: center; color: var(--rosa-texto);
+}
+.v-row-accao:hover { background: var(--rosa-claro); color: var(--rosa-texto); }

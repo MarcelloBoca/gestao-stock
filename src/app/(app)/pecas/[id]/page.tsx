@@ -46,7 +46,12 @@ export default async function PecaPage({ params, searchParams }: { params: Promi
       <PageHead
         title={p.nome}
         back={{ href: "/pecas", label: "Peças e stock" }}
-        action={<Link href={`/pecas/${p.id}/editar`} className="btn"><Icon name="lapis" size={16} /> Editar peça</Link>}
+        action={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Link href={`/mercadoria?peca=${p.id}`} className="btn btn-primary"><Icon name="camiao" size={16} /> Chegou mercadoria</Link>
+            <Link href={`/pecas/${p.id}/editar`} className="btn"><Icon name="lapis" size={16} /> Editar peça</Link>
+          </div>
+        }
       />
       {sp.nova ? (
         <section role="status" className="v-sec" style={{ borderColor: "var(--paga)", flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "10px 16px" }}>

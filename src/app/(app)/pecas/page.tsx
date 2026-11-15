@@ -71,7 +71,8 @@ export default async function PecasPage({ searchParams }: { searchParams: Promis
               const tom = esgotada(p) ? "zero" : aAcabar(p) ? "pouco" : "ok";
               const cores = new Set(p.variantes.filter((v) => v.activa && v.cor).map((v) => v.cor)).size;
               return (
-                <Link key={p.id} href={`/pecas/${p.id}`} className="v-row" style={{ minHeight: 60 }}>
+                <div key={p.id} className="v-row" style={{ minHeight: 60, gap: 8 }}>
+                <Link href={`/pecas/${p.id}`} className="v-row-link">
                   <Foto path={p.foto} categoria={p.categoria} alt="" size={44} />
                   <span className="v-row-m">
                     <span className="v-row-t">{p.nome}</span>
@@ -83,6 +84,10 @@ export default async function PecasPage({ searchParams }: { searchParams: Promis
                   </span>
                   <span style={{ color: "var(--fraco)", display: "flex" }}><Icon name="seguir" size={16} /></span>
                 </Link>
+                <Link href={`/mercadoria?peca=${p.id}`} className="v-row-accao" aria-label={`Chegou mercadoria: ${p.nome}`} title="Chegou mercadoria">
+                  <Icon name="camiao" size={18} />
+                </Link>
+                </div>
               );
             })}
           </div>

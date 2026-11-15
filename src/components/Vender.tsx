@@ -29,6 +29,12 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
   const cesto = useCesto();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
+  const [fNum, setFNum] = useState("");
+  const [fCor, setFCor] = useState("");
+  const [fPreco, setFPreco] = useState("");
+  const [soStock, setSoStock] = useState(true);
+  const [ordem, setOrdem] = useState("nome");
+  const [verFiltros, setVerFiltros] = useState(false);
   const [selId, setSelId] = useState<string | null>(null);
   const [cor, setCor] = useState<string | null>(null);
   const [tam, setTam] = useState<string | null>(null);
@@ -48,14 +54,36 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
     return m;
   }, [pecas]);
   const categorias = useMemo(() => Array.from(new Set(pecas.map((p) => p.categoria))).sort(), [pecas]);
+  const numeros = useMemo(() => Array.from(new Set(pecas.flatMap((p) => p.variantes.map((v) => v.tamanho)).filter((t): t is string => Boolean(t))))
+    .sort((a, b) => (/^\d+$/.test(a) && /^\d+$/.test(b) ? Number(a) - Number(b) : /^\d/.test(a) ? -1 : /^\d/.test(b) ? 1 : a.localeCompare(b))), [pecas]);
+  const coresTodas = useMemo(() => Array.from(new Set(pecas.flatMap((p) => p.variantes.map((v) => v.cor)).filter((c): c is string => Boolean(c)))).sort(), [pecas]);
   const lista = useMemo(() => {
     const t = norm(q.trim());
-    return pecas.filter(
-      (p) =>
-        (!cat || p.categoria === cat) &&
-        (!t || norm(`${p.nome} ${p.categoria} ${p.variantes.map((v) => `${v.cor ?? ""} ${v.tamanho ?? ""}`).join(" ")}`).includes(t)),
-    );
-  }, [pecas, q, cat]);
+    const r = pecas.filter((p) => {
+      if (cat && p.categoria !== cat) return false;
+      if (fPreco === "ate1" && p.preco > 1000) return false;
+      if (fPreco === "1a25" && (p.preco < 1000 || p.preco > 2500)) return false;
+      if (fPreco === "mais" && p.preco <= 2500) return false;
+      if (fNum || fCor || soStock) {
+        const ok = p.variantes.some((v) => (!fNum || v.tamanho === fNum) && (!fCor || v.cor === fCor) && (!soStock || v.stock > 0));
+        if (!ok) return false;
+      }
+      return !t || norm(`${p.nome} ${p.categoria} ${p.variantes.map((v) => `${v.cor ?? ""} ${v.tamanho ?? ""}`).join(" ")}`).includes(t);
+    });
+    if (ordem === "preco-asc") r.sort((a, b) => a.preco - b.preco);
+    else if (ordem === "preco-desc") r.sort((a, b) => b.preco - a.preco);
+    else r.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+    return r;
+  }, [pecas, q, cat, fNum, fCor, fPreco, soStock, ordem]);
+  const PRECOS: [string, string][] = [["ate1", "Até 1.000"], ["1a25", "1.000 a 2.500"], ["mais", "Mais de 2.500"]];
+  const activos: { k: string; t: string; tirar: () => void }[] = [
+    cat ? { k: "cat", t: cat, tirar: () => setCat("") } : null,
+    fNum ? { k: "num", t: `Nº ${fNum}`, tirar: () => setFNum("") } : null,
+    fCor ? { k: "cor", t: fCor, tirar: () => setFCor("") } : null,
+    fPreco ? { k: "pre", t: PRECOS.find((x) => x[0] === fPreco)?.[1] ?? "", tirar: () => setFPreco("") } : null,
+    !soStock ? { k: "stk", t: "Também esgotadas", tirar: () => setSoStock(true) } : null,
+  ].filter(Boolean) as { k: string; t: string; tirar: () => void }[];
+  const limparFiltros = () => { setCat(""); setFNum(""); setFCor(""); setFPreco(""); setSoStock(true); };
 
   const sel = selId ? porId.get(selId) ?? null : null;
   const cores = sel ? Array.from(new Set(sel.variantes.map((v) => v.cor).filter(Boolean))) as string[] : [];
@@ -137,21 +165,94 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                 <span className="visually-hidden">Procurar peça</span>
                 <input id="procura" type="search" placeholder="Procurar peça" value={q} onChange={(e) => setQ(e.target.value)} />
               </label>
-              {categorias.length > 1 ? (
-                <label style={{ display: "contents" }}>
-                  <span className="visually-hidden">Tipo de peça</span>
-                  <select className="select" value={cat} onChange={(e) => setCat(e.target.value)}>
-                    <option value="">Todas</option>
-                    {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </label>
-              ) : null}
+              <button type="button" className="btn v-btn-filtros" aria-expanded={verFiltros} aria-controls="painel-filtros" onClick={() => setVerFiltros((v) => !v)}>
+                <Icon name="filtro" size={16} /> Filtros{activos.length ? <span className="v-conta">{activos.length}</span> : null}
+              </button>
             </div>
+          </div>
+          {verFiltros ? (
+            <div className="v-painel-filtros">
+              <button type="button" className="v-folha-fundo v-so-tel" aria-label="Fechar filtros" onClick={() => setVerFiltros(false)} />
+              <div id="painel-filtros" role="dialog" aria-label="Filtros" className="v-painel-caixa">
+                <span className="v-folha-pega v-so-tel" aria-hidden="true" />
+                <div className="c-entre" style={{ alignItems: "center" }}>
+                  <strong style={{ fontSize: 18 }}>Filtros</strong>
+                  <button type="button" className="btn btn-text btn-sm" onClick={limparFiltros}>Limpar tudo</button>
+                </div>
+                {categorias.length > 1 ? (
+                  <div className="v-filtro-g">
+                    <p className="c-rot">Tipo de peça</p>
+                    <div className="c-chips">
+                      {categorias.map((c) => (
+                        <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "" : c)}>{c}</button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {numeros.length ? (
+                  <div className="v-filtro-g">
+                    <p className="c-rot">Número / tamanho</p>
+                    <div className="c-opts" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(56px, 1fr))" }}>
+                      {numeros.map((n) => (
+                        <button key={n} type="button" className="c-opt" aria-pressed={fNum === n} onClick={() => setFNum(fNum === n ? "" : n)}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {coresTodas.length ? (
+                  <div className="v-filtro-g">
+                    <p className="c-rot">Cor</p>
+                    <div className="c-chips">
+                      {coresTodas.map((c) => (
+                        <button key={c} type="button" className="c-chip" aria-pressed={fCor === c} onClick={() => setFCor(fCor === c ? "" : c)} style={{ gap: 6 }}>
+                          <span className="c-bolinha" style={{ background: corHex(c), width: 14, height: 14 }} />{c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="v-filtro-g">
+                  <p className="c-rot">Preço</p>
+                  <div className="c-opts" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+                    {PRECOS.map(([k, t]) => (
+                      <button key={k} type="button" className="c-opt" style={{ fontSize: 14 }} aria-pressed={fPreco === k} onClick={() => setFPreco(fPreco === k ? "" : k)}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+                <label className="v-check" style={{ justifyContent: "space-between" }}>
+                  Só peças com stock
+                  <input type="checkbox" checked={soStock} onChange={(e) => setSoStock(e.target.checked)} />
+                </label>
+                <button type="button" className="btn btn-primary" style={{ width: "100%", minHeight: 48 }} onClick={() => setVerFiltros(false)}>
+                  {lista.length ? `Ver ${lista.length === 1 ? "1 peça" : `${lista.length} peças`}` : "Nenhuma peça com estes filtros"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {activos.length ? (
+            <div className="c-chips" aria-label="Filtros ligados">
+              {activos.map((f) => (
+                <button key={f.k} type="button" className="c-chip" aria-pressed="true" onClick={f.tirar} aria-label={`Tirar filtro ${f.t}`}>
+                  {f.t} <Icon name="x" size={14} />
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="c-entre" style={{ alignItems: "center", fontSize: 14, color: "var(--suave)" }}>
+            <span role="status">{lista.length === 1 ? "1 peça" : `${lista.length} peças`}</span>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              Ordenar
+              <select className="select" value={ordem} onChange={(e) => setOrdem(e.target.value)} style={{ width: "auto", minHeight: 36, paddingTop: 0, paddingBottom: 0 }}>
+                <option value="nome">Nome</option>
+                <option value="preco-asc">Preço mais baixo</option>
+                <option value="preco-desc">Preço mais alto</option>
+              </select>
+            </label>
           </div>
           {lista.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10, padding: "8px 0" }}>
-              <p className="muted" style={{ margin: 0 }}>{pecas.length ? (q ? `Nenhuma peça encontrada para “${q}”${cat ? ` em ${cat}` : ""}.` : `Ainda não há peças em ${cat}.`) : "Ainda não há peças. A gestora regista-as em Peças e stock."}</p>
-              {pecas.length ? <button type="button" className="btn" onClick={() => { setQ(""); setCat(""); }}>Ver todas as peças</button> : null}
+              <p className="muted" style={{ margin: 0 }}>{pecas.length ? (q ? `Nenhuma peça encontrada para “${q}”${activos.length ? " com estes filtros" : ""}.` : "Nenhuma peça com estes filtros.") : "Ainda não há peças. A gestora regista-as em Peças e stock."}</p>
+              {pecas.length ? <button type="button" className="btn" onClick={() => { setQ(""); limparFiltros(); }}>Ver todas as peças</button> : null}
             </div>
           ) : (
             <div className="c-grid largo">
