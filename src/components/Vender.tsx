@@ -238,7 +238,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
           ) : null}
           </div>
           {activos.length ? (
-            <div className="c-chips" aria-label="Filtros ligados">
+            <div className="c-chips v-tags-ligados" aria-label="Filtros ligados">
               {activos.map((f) => (
                 <button key={f.k} type="button" className="c-chip v-tag" onClick={f.tirar} aria-label={`Tirar filtro ${f.t}`}>
                   {f.t} <Icon name="x" size={14} />
