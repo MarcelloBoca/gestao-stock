@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Icon from "./Icon";
 import { ActionForm, SubmitButton } from "./forms";
 import { guardarPeca } from "@/app/actions/stock";
@@ -32,6 +32,7 @@ async function reduzir(file: File, max = 1200): Promise<File> {
 
 export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: { inicial?: Inicial; categorias: Lista[]; cores: Lista[]; tamanhos: Lista[] }) {
   const [preview, setPreview] = useState<string | null>(fotoUrl(inicial.foto));
+  const fotoRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(inicial.nome ?? "");
   const [preco, setPreco] = useState(inicial.preco ? String(inicial.preco) : "");
   const [custo, setCusto] = useState(inicial.custo !== null && inicial.custo !== undefined ? String(inicial.custo) : "");
@@ -91,13 +92,15 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
   if (!cat) falta.push("o tipo de peça");
   const lista = (a: string[]) => (a.length > 1 ? `${a.slice(0, -1).join(", ")} e ${a[a.length - 1]}` : a[0]);
 
+  // A câmara e a galeria são dois botões; a foto escolhida vai sempre para o mesmo campo "foto".
   async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (!f) return;
+    e.target.value = "";
+    if (!f || !fotoRef.current) return;
     const pequena = await reduzir(f);
     const dt = new DataTransfer();
     dt.items.add(pequena);
-    e.target.files = dt.files;
+    fotoRef.current.files = dt.files;
     setPreview(URL.createObjectURL(pequena));
   }
 
@@ -113,17 +116,31 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
         <div className="v-pilha">
           <section aria-labelledby="h-dados" className="v-sec">
             <div className="v-sec-h"><h2 id="h-dados">Dados da peça</h2></div>
+            <div className="field">
+              <span className="label">Foto da peça</span>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <span style={{ width: 72, height: 72, flex: "none", borderRadius: 12, overflow: "hidden", background: "var(--rosa-claro)", color: "#a9849b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {preview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={preview} alt="Foto escolhida" style={{ width: 72, height: 72, objectFit: "cover" }} />
+                  ) : (
+                    <Icon name="camara" size={24} stroke={1.6} />
+                  )}
+                </span>
+                <div style={{ flex: 1, minWidth: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+                  <label className="btn" style={{ position: "relative", cursor: "pointer" }}>
+                    <Icon name="camara" size={16} /> Tirar foto
+                    <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="v-ficheiro" />
+                  </label>
+                  <label className="btn" style={{ position: "relative", cursor: "pointer" }}>
+                    <Icon name="grelha" size={16} /> Da galeria
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={escolherFoto} className="v-ficheiro" />
+                  </label>
+                </div>
+              </div>
+              <input ref={fotoRef} type="file" name="foto" hidden tabIndex={-1} aria-hidden="true" />
+            </div>
             <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
-              <label className="c-fotobox" style={{ width: 72, height: 72, flex: "none", padding: 0, gap: 2, fontSize: 11 }}>
-                {preview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="Foto da peça" style={{ width: 72, height: 72 }} />
-                ) : (
-                  <><Icon name="camara" size={22} stroke={1.8} />Foto</>
-                )}
-                <span className="visually-hidden">{preview ? "Mudar a foto" : "Tirar ou escolher foto"}</span>
-                <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={escolherFoto} />
-              </label>
               <div className="field" style={{ flex: 1, minWidth: 0 }}>
                 <label className="label" htmlFor="nome">Nome da peça</label>
                 <input id="nome" name="nome" className="input" required maxLength={120} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Sandália Rasteira"
@@ -154,7 +171,7 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
                 <input id="custo" name="custo" className="input" inputMode="decimal" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0" />
               </div>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: margem === null ? "var(--fraco)" : margem.valor > 0 ? "var(--paga)" : "var(--porpagar)" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: margem === null ? "var(--fraco)" : margem.valor > 0 ? "var(--paga)" : "var(--porpagar)" }}>
               {margem === null ? "Escreva o preço e o custo para ver a margem (serve para o lucro estimado)." : margem.valor > 0 ? `Margem: ${margem.texto} por peça (${margem.pct}%)` : "O custo é igual ou maior que o preço de venda."}
             </span>
             <div className="field" style={{ maxWidth: 220 }}>
@@ -165,7 +182,7 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
         </div>
         <div className="v-pilha">
           <section aria-labelledby="h-cores" className="v-sec">
-            <div className="v-sec-h"><h2 id="h-cores">Cores</h2><span className="muted" style={{ fontSize: 13 }}>{escolhidas.length ? (escolhidas.length === 1 ? "1 cor" : `${escolhidas.length} cores`) : "sem cor"}</span></div>
+            <div className="v-sec-h"><h2 id="h-cores">Cores</h2><span className="muted" style={{ fontSize: 14 }}>{escolhidas.length ? (escolhidas.length === 1 ? "1 cor" : `${escolhidas.length} cores`) : "sem cor"}</span></div>
             <div role="group" aria-label="Cores" className="v-cores" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))" }}>
               {visiveis.map((c) => (
                 <button key={c} type="button" className="v-cor" aria-pressed={escolhida(c)} onClick={() => alternar(c)}>
@@ -235,7 +252,7 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
             À venda
           </label>
         ) : (
-          <span role={tentou && falta.length ? "alert" : "status"} style={{ flex: "1 1 220px", fontSize: 13, fontWeight: 600, color: !falta.length ? "var(--paga)" : tentou ? "var(--porpagar)" : "var(--fraco)" }}>
+          <span role={tentou && falta.length ? "alert" : "status"} style={{ flex: "1 1 220px", fontSize: 14, fontWeight: 600, color: !falta.length ? "var(--paga)" : tentou ? "var(--porpagar)" : "var(--fraco)" }}>
             {!falta.length ? "Tudo pronto. O stock começa a zero." : `${tentou ? "Falta" : "Preencha"} ${lista(falta)}.`}
           </span>
         )}

@@ -67,7 +67,7 @@ export default async function VendasPage({ searchParams }: { searchParams: Promi
         <LucroTile {...lucro} borda />
       </div>
       <section aria-labelledby="h-lista" className="v-sec">
-        <div className="v-sec-h"><h2 id="h-lista">{TITULO[periodo.p]}</h2><span className="muted" style={{ fontSize: 13 }}>{vendas.length === 1 ? "1 venda" : `${vendas.length} vendas`}</span></div>
+        <div className="v-sec-h"><h2 id="h-lista">{TITULO[periodo.p]}</h2><span className="muted" style={{ fontSize: 14 }}>{vendas.length === 1 ? "1 venda" : `${vendas.length} vendas`}</span></div>
         {vendas.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8 }}>
             <p className="muted" style={{ margin: 0 }}>{filtrado ? "Nenhuma venda com estes filtros." : "Não há vendas neste período."}</p>
@@ -82,7 +82,7 @@ export default async function VendasPage({ searchParams }: { searchParams: Promi
                   <span className="v-row-h">{curto ? hora(v.criada_em) : diaCurto(diaIso(new Date(v.criada_em)))}</span>
                   <span className="v-row-m">
                     <span className={`v-row-t${anulada ? " c-riscado" : ""}`}>{descricao(v)}</span>
-                    <span className="v-row-s">{v.vendedor}, {nomeForma(v.forma)}{curto ? "" : `, ${hora(v.criada_em)}`} {v.estado !== "normal" ? <EstadoPill estado={v.estado} /> : null}</span>
+                    <span className="v-row-s">{v.cliente ? `${v.cliente.nome}, ` : ""}{v.vendedor}, {nomeForma(v.forma)}{curto ? "" : `, ${hora(v.criada_em)}`} {v.estado !== "normal" ? <EstadoPill estado={v.estado} /> : null}</span>
                   </span>
                   <span className={`v-row-v${anulada ? " c-riscado" : ""}`}>{mt(v.total)}</span>
                 </Link>

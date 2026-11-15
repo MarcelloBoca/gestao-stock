@@ -175,7 +175,7 @@ function Teclado({ quem, next, conhecida, trocar, esquecer }: { quem: Pessoa; ne
         )}
       </div>
       {conhecida ? (
-        <button type="button" className="btn btn-text" onClick={esquecer} style={{ fontSize: 13 }}>Tirar {quem.n.split(" ")[0]} deste aparelho</button>
+        <button type="button" className="btn btn-text" onClick={esquecer} style={{ fontSize: 14 }}>Tirar {quem.n.split(" ")[0]} deste aparelho</button>
       ) : null}
     </div>
   );

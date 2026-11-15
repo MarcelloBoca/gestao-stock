@@ -19,6 +19,8 @@ export function descrever(accao: string, antes: J, depois: J): { etiqueta: strin
       return { etiqueta: TIPO[depois?.tipo] ?? "Stock", tom: "ok", texto: `${depois?.peca}: ${depois?.quantidade > 0 ? "+" : "−"}${Math.abs(depois?.quantidade ?? 0)} (fica com ${depois?.stock}).${depois?.motivo ? ` Motivo: ${depois.motivo}.` : ""}` };
     case "preco_alterado":
       return { etiqueta: "Preço alterado", tom: "rosa", texto: `${depois?.nome}: de ${mt(antes?.preco_venda)} para ${mt(depois?.preco_venda)}.` };
+    case "cliente_editado":
+      return { etiqueta: "Cliente editado", tom: "cinza", texto: `${depois?.nome}${depois?.aceita_mensagens === false ? " (não quer mensagens)" : ""}.` };
     case "custo_alterado":
       return { etiqueta: "Custo alterado", tom: "rosa", texto: `${depois?.peca}: ${antes?.custo === null || antes?.custo === undefined ? "sem custo" : mt(antes.custo)} para ${depois?.custo === null || depois?.custo === undefined ? "sem custo" : mt(depois.custo)}.` };
     case "produto_criado":

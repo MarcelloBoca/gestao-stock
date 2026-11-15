@@ -4,10 +4,10 @@ import { inicioDiaUtc, somarDias } from "./format";
 import { nomeVariante } from "./cores";
 
 export type LinhaVenda = { id: string; variante_id: string; produto_id: string; nome: string; detalhe: string; foto: string | null; categoria: string; quantidade: number; preco: number; subtotal: number; substituida: boolean };
-export type Venda = { id: string; criada_em: string; forma: string; total: number; estado: "normal" | "corrigida" | "anulada"; motivo: string | null; vendedor_id: string; vendedor: string; linhas: LinhaVenda[] };
+export type Venda = { id: string; criada_em: string; forma: string; total: number; estado: "normal" | "corrigida" | "anulada"; motivo: string | null; vendedor_id: string; vendedor: string; cliente: { id: string; nome: string; contacto: string | null } | null; linhas: LinhaVenda[] };
 
 const SELECT =
-  "id, criada_em, forma_pagamento, total, estado, motivo, vendedor_id, utilizadores(nome), linhas_venda(id, quantidade, preco_unitario, subtotal, substituida, variante_id, variantes(produto_id, tamanhos(nome), cores(nome), produtos(nome, foto_path, categorias(nome))))";
+  "id, criada_em, forma_pagamento, total, estado, motivo, vendedor_id, cliente_id, utilizadores(nome), clientes(id, nome, contacto), linhas_venda(id, quantidade, preco_unitario, subtotal, substituida, variante_id, variantes(produto_id, tamanhos(nome), cores(nome), produtos(nome, foto_path, categorias(nome))))";
 
 type R = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -15,6 +15,7 @@ function mapear(v: R): Venda {
   return {
     id: v.id, criada_em: v.criada_em, forma: v.forma_pagamento, total: Number(v.total), estado: v.estado, motivo: v.motivo ?? null,
     vendedor_id: v.vendedor_id, vendedor: v.utilizadores?.nome ?? "",
+    cliente: v.clientes ? { id: v.clientes.id, nome: v.clientes.nome, contacto: v.clientes.contacto ?? null } : null,
     linhas: (v.linhas_venda ?? []).map((l: R) => ({
       id: l.id, variante_id: l.variante_id, produto_id: l.variantes?.produto_id, nome: l.variantes?.produtos?.nome ?? "",
       detalhe: nomeVariante({ cor: l.variantes?.cores?.nome ?? null, tamanho: l.variantes?.tamanhos?.nome ?? null }),

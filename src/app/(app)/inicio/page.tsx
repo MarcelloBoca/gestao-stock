@@ -112,7 +112,7 @@ export default async function InicioPage() {
               const v = rel.por_forma[f.id] ?? 0;
               return (
                 <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div className="c-entre" style={{ fontSize: 13 }}><span>{f.curto}</span><strong>{mt(v)}</strong></div>
+                  <div className="c-entre" style={{ fontSize: 14 }}><span>{f.curto}</span><strong>{mt(v)}</strong></div>
                   <div className="v-barra"><span style={{ width: `${Math.round((v / maxForma) * 100)}%` }} /></div>
                 </div>
               );

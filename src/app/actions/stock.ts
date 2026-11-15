@@ -13,9 +13,9 @@ const TIPOS = ["entrada", "devolucao", "defeito", "ajuste"];
 /** ST-02/ST-03: criar ou editar uma peça, com foto e variantes de cor e número. */
 export async function guardarPeca(_prev: ActionState, fd: FormData): Promise<ActionState> {
   let id = "";
+  const existente = String(fd.get("id") ?? "");
   try {
     const { sb } = await requireUser(GESTAO);
-    const existente = String(fd.get("id") ?? "");
     const nome = String(fd.get("nome") ?? "").trim().slice(0, 120);
     const categoria = String(fd.get("categoria") ?? "");
     const preco = parseMT(String(fd.get("preco") ?? ""));
@@ -73,7 +73,7 @@ export async function guardarPeca(_prev: ActionState, fd: FormData): Promise<Act
   } catch (e) {
     return { error: mensagemErro(e) };
   }
-  redirect(`/pecas/${id}?ok=1`);
+  redirect(`/pecas/${id}?ok=1${uuid(existente) ? "" : "&nova=1"}`);
 }
 
 /** ST-04/ST-05: chegou mercadoria, devolução, defeito ou acerto de contagem. */

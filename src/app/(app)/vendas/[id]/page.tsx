@@ -8,6 +8,7 @@ import { obterVenda } from "@/lib/vendas";
 import { anularVenda } from "@/app/actions/vendas";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Foto, PageHead } from "@/components/ui";
+import { contactoLegivel } from "@/lib/whatsapp";
 import { EstadoPill } from "@/components/VendaUi";
 import Icon from "@/components/Icon";
 
@@ -24,7 +25,7 @@ export default async function VendaPage({ params }: { params: Promise<{ id: stri
   const antigas = v.linhas.filter((l) => l.substituida);
   return (
     <div className="c-page c-narrow" style={{ maxWidth: 640 }}>
-      <PageHead title={`Venda das ${hora(v.criada_em)}`} sub={`${diaLongo(diaIso(new Date(v.criada_em)))} · ${v.vendedor} · ${nomeForma(v.forma)}`} back={{ href: "/vendas", label: "Vendas" }} />
+      <PageHead title={`Venda das ${hora(v.criada_em)}`} sub={`${diaLongo(diaIso(new Date(v.criada_em)))}, ${v.vendedor}, ${nomeForma(v.forma)}${v.cliente ? `. Cliente: ${v.cliente.nome}${v.cliente.contacto ? ` (${contactoLegivel(v.cliente.contacto)})` : ""}` : ""}`} back={{ href: "/vendas", label: "Vendas" }} />
       {v.estado !== "normal" ? (
         <p className={`alert ${v.estado === "anulada" ? "alert-error" : "alert-warn"}`}>
           <span><EstadoPill estado={v.estado} /> {v.motivo ? `Motivo: ${v.motivo}` : null}</span>

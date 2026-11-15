@@ -405,3 +405,42 @@ body:has(.v-entrada) { background: var(--fundo); }
 .btn-text, .btn.btn-text { border: 0; background: transparent; color: var(--rosa-texto); }
 .btn-text:hover { background: var(--rosa-claro); }
 @media (min-width: 900px) { .c-side-sair { border: 0; min-height: 0; padding: 0; } }
+.v-ficheiro { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.btn:has(.v-ficheiro:focus-visible) { outline: 2px solid var(--rosa-texto); outline-offset: 2px; }
+.v-cliente { border: 1px solid var(--linha); border-radius: 12px; padding: 10px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.v-cliente legend { padding: 0 4px; }
+.btn-whats { background: #1f7a55; border-color: #1f7a55; color: #fff; }
+.btn-whats:hover { background: #18623f; color: #fff; }
+.v-editar > summary { list-style: none; cursor: pointer; display: inline-flex; min-height: 32px; align-items: center; }
+.v-editar > summary::-webkit-details-marker { display: none; }
+.v-editar[open] > summary { margin-bottom: 8px; }
+
+/* =====================================================================
+   Letra um pouco maior (mais fácil de ler) e campos com 16px:
+   no iPhone, um campo com letra menor que 16px faz zoom ao tocar e a página
+   não volta ao tamanho normal. Com 16px não há zoom.
+   ===================================================================== */
+body { font-size: 15px; }
+input, select, textarea, .input, .select, .textarea, .c-procura input, .v-campo-user { font-size: 16px; }
+.input, .select { min-height: 44px; }
+.btn { font-size: 15px; min-height: 42px; }
+.btn-sm { font-size: 14px; min-height: 36px; }
+.label, .c-rot { font-size: 14px; }
+.hint, .v-row-s, .v-tile-s, .v-quem-f, .v-pessoa-f, .c-linha-s, .c-q { font-size: 13px; }
+.muted { font-size: inherit; }
+.v-sec-h h2, .c-card-t, .h2 { font-size: 17px; }
+.v-sec-h a, .v-link, .v-estado { font-size: 14px; }
+.v-row-t, .c-linha-t, .c-pcard-n, .v-quem-n, .v-accao, .v-cor, .c-tile-t { font-size: 15px; }
+.v-row-v, .c-linha-v, .c-pcard-b { font-size: 15px; }
+.v-row-h { font-size: 13px; }
+.v-tile-k, .v-hero-k, .v-hero-s { font-size: 14px; }
+.v-tile-v { font-size: 24px; }
+.v-hero-v { font-size: 34px; }
+.c-chip { font-size: 14px; min-height: 36px; }
+.c-opt { font-size: 15px; min-height: 44px; }
+.c-bnav-a { font-size: 12px; }
+.c-side-a { font-size: 15px; }
+.c-side-grupo { font-size: 13px; }
+.alert { font-size: 14px; }
+.h1 { font-size: 32px; }
+@media (max-width: 899px) { .h1 { font-size: 28px; } .v-hero-v { font-size: 30px; } }

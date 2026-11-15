@@ -120,15 +120,15 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
         <LucroTile {...lucroEstimado(rel.por_produto, cat.pecas)} borda />
       </div>
       <section aria-labelledby="h-graf" className="v-sec">
-        <div className="v-sec-h"><h2 id="h-graf">{grafTitulo}</h2>{melhor.v ? <span className="muted" style={{ fontSize: 13 }}>{barras.length > 1 ? "Melhor: " : ""}{melhor.l}, {mt(melhor.v)}</span> : null}</div>
+        <div className="v-sec-h"><h2 id="h-graf">{grafTitulo}</h2>{melhor.v ? <span className="muted" style={{ fontSize: 14 }}>{barras.length > 1 ? "Melhor: " : ""}{melhor.l}, {mt(melhor.v)}</span> : null}</div>
         {rel.total === 0 ? <p className="muted" style={{ margin: 0 }}>Não houve vendas neste período.</p> : (
           <div role="img" aria-label={`${grafTitulo}: ${barras.map((b) => `${b.l} ${mt(b.v)}`).join(", ")}`}
             style={{ display: "flex", alignItems: "flex-end", gap: barras.length > 20 ? 3 : 8, height: 190, paddingTop: 10, overflowX: "auto" }}>
             {barras.map((b) => (
               <div key={b.l} style={{ flex: `1 0 ${barras.length > 20 ? 18 : 24}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: 10, color: "var(--fraco)", whiteSpace: "nowrap", minHeight: 13 }}>{b.v && barras.length <= 14 ? curto(b.v) : ""}</span>
+                <span style={{ fontSize: 11, color: "var(--fraco)", whiteSpace: "nowrap", minHeight: 13 }}>{b.v && barras.length <= 14 ? curto(b.v) : ""}</span>
                 <div style={{ width: "100%", maxWidth: 44, height: `${Math.round((b.v / maxBarra) * 100)}%`, minHeight: 2, borderRadius: "5px 5px 2px 2px", background: b.v === maxBarra ? "var(--rosa-texto)" : "#e3c6d7" }} />
-                <span style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>{b.l}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>{b.l}</span>
               </div>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           <div className="v-sec-h"><h2 id="h-quem">Por vendedora</h2></div>
           {rel.por_vendedor.length === 0 ? <p className="empty">Sem vendas.</p> : rel.por_vendedor.map((v) => (
             <div key={v.nome} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <div className="c-entre" style={{ fontSize: 13 }}><span><strong>{v.nome}</strong> <span className="muted">{v.vendas} {v.vendas === 1 ? "venda" : "vendas"}</span></span><strong>{mt(v.total)}</strong></div>
+              <div className="c-entre" style={{ fontSize: 14 }}><span><strong>{v.nome}</strong> <span className="muted">{v.vendas} {v.vendas === 1 ? "venda" : "vendas"}</span></span><strong>{mt(v.total)}</strong></div>
               <div className="v-barra"><span style={{ width: `${Math.round((v.total / maxPessoa) * 100)}%` }} /></div>
             </div>
           ))}
@@ -168,7 +168,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
             const v = rel.por_forma[f.id] ?? 0;
             return (
               <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <div className="c-entre" style={{ fontSize: 13 }}><span>{f.curto}</span><strong>{mt(v)}</strong></div>
+                <div className="c-entre" style={{ fontSize: 14 }}><span>{f.curto}</span><strong>{mt(v)}</strong></div>
                 <div className="v-barra"><span style={{ width: `${Math.round((v / maxForma) * 100)}%` }} /></div>
               </div>
             );
@@ -178,7 +178,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           <div className="v-sec-h"><h2 id="h-cat">Por tipo de peça</h2></div>
           {rel.por_categoria.length === 0 ? <p className="empty">Sem vendas.</p> : rel.por_categoria.map((c) => (
             <div key={c.nome} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <div className="c-entre" style={{ fontSize: 13 }}><span>{c.nome}</span><strong>{mt(c.total)}</strong></div>
+              <div className="c-entre" style={{ fontSize: 14 }}><span>{c.nome}</span><strong>{mt(c.total)}</strong></div>
               <div className="v-barra"><span style={{ width: `${Math.round((c.total / maxCat) * 100)}%` }} /></div>
             </div>
           ))}

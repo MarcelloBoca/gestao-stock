@@ -28,6 +28,11 @@ No Supabase (segredo da função `contas`): `SETUP_CODE`, o código para criar a
 - O custo de cada peça fica na tabela `custos_produtos` (migração em `supabase/migrations/20261114_custos_produtos.sql`). Só a gestora e a administradora o lêem; muda-se pela função `definir_custo`, que fica no registo de acções.
 - Lucro estimado = vendido − quantidade × custo actual de cada peça. As peças vendidas sem custo não entram e são assinaladas.
 
+## Clientes
+
+- Na venda há dois campos opcionais: nome e contacto do cliente. A base de dados junta o cliente pelo contacto (ou pelo nome, se não houver contacto) na tabela `clientes` (migração `supabase/migrations/20261115_clientes.sql`); `registar_venda` ganhou `p_cliente_nome` e `p_cliente_contacto`.
+- Só a gestora e a administradora vêem a lista (menu Clientes). Lá escreve-se uma mensagem com `{nome}` e o botão WhatsApp de cada cliente abre a conversa com a mensagem pronta (link `wa.me`). Quem não quer mensagens fica marcado e deixa de aparecer em "Com WhatsApp".
+
 ## Entrar com PIN
 
 - No ecrã de entrada toca-se no nome e escreve-se um PIN de 4 números. Os nomes que aparecem são só os de quem já entrou **neste aparelho** (cookie `sola_pessoas`); quem nunca entrou escreve o utilizador em "Outra pessoa".

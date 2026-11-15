@@ -48,15 +48,23 @@ export default async function PecaPage({ params, searchParams }: { params: Promi
         back={{ href: "/pecas", label: "Peças e stock" }}
         action={<Link href={`/pecas/${p.id}/editar`} className="btn"><Icon name="lapis" size={16} /> Editar peça</Link>}
       />
-      {sp.ok ? <p className="alert alert-ok" role="status">Peça guardada.</p> : null}
+      {sp.nova ? (
+        <section role="status" className="v-sec" style={{ borderColor: "var(--paga)", flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "10px 16px" }}>
+          <span style={{ flex: "1 1 240px", display: "flex", flexDirection: "column", gap: 2 }}>
+            <strong style={{ color: "var(--paga)", fontSize: 16 }}>Peça criada</strong>
+            <span className="muted">O stock começa a zero. Registe agora as peças que chegaram.</span>
+          </span>
+          <Link href={`/mercadoria?peca=${p.id}`} className="btn btn-primary" style={{ flex: "1 1 220px" }}><Icon name="camiao" size={18} /> Registar chegada de mercadoria</Link>
+        </section>
+      ) : sp.ok ? <p className="alert alert-ok" role="status">Peça guardada.</p> : null}
       {!p.activo ? <p className="alert alert-warn">Esta peça está fora de venda.</p> : null}
       <section aria-label="Resumo da peça" className="v-sec" style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "14px 20px" }}>
         <div style={{ flex: "1 1 240px", display: "flex", gap: 14, alignItems: "center", minWidth: 0 }}>
           <Foto path={p.foto} categoria={p.categoria} alt={p.nome} size={64} />
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <span className="muted" style={{ fontSize: 13 }}>{p.categoria}</span>
+            <span className="muted" style={{ fontSize: 14 }}>{p.categoria}</span>
             <span style={{ fontSize: 22, fontWeight: 700 }}>{mt(p.preco)}</span>
-            <span className="muted" style={{ fontSize: 13 }}>{p.custo !== null ? `Custo ${mt(p.custo)}, margem ${mt(p.preco - p.custo)}` : "Sem custo registado"}. Avisa quando restarem {p.stock_minimo}.</span>
+            <span className="muted" style={{ fontSize: 14 }}>{p.custo !== null ? `Custo ${mt(p.custo)}, margem ${mt(p.preco - p.custo)}` : "Sem custo registado"}. Avisa quando restarem {p.stock_minimo}.</span>
           </div>
         </div>
         <div className="v-dois" style={{ flex: "1 1 240px" }}>
@@ -71,7 +79,7 @@ export default async function PecaPage({ params, searchParams }: { params: Promi
           <Link href={`/mercadoria?peca=${p.id}`} className="btn btn-sm"><Icon name="lapis" size={14} /> Ajustar stock</Link>
         </div>
         {cores.length > 1 || (cores.length === 1 && cores[0]) ? (
-          <div role="group" aria-label="Cor" className="v-cores" style={{ gridTemplateColumns: cores.length <= 3 ? `repeat(${cores.length}, minmax(0, 1fr))` : "repeat(auto-fill, minmax(110px, 1fr))" }}>
+          <div role="group" aria-label="Cor" className="v-cores" style={{ gridTemplateColumns: cores.length <= 2 ? `repeat(${cores.length}, minmax(0, 1fr))` : "repeat(auto-fill, minmax(120px, 1fr))" }}>
             {cores.map((c) => (
               <Link key={c ?? "sem"} href={`/pecas/${p.id}?cor=${encodeURIComponent(c ?? "")}`} scroll={false} replace className="v-cor" aria-current={c === corSel ? "true" : undefined}
                 aria-label={`${c ?? "Sem cor"}, ${totalCor(c)} ${totalCor(c) === 1 ? "unidade" : "unidades"}`}>

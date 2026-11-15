@@ -24,6 +24,7 @@ function grupos(perfil: Perfil): Grupo[] {
         { href: "/vendas", label: "Vendas da loja", icon: "lista", match: (p) => p.startsWith("/vendas") },
         { href: "/pecas", label: "Peças e stock", icon: "preco", match: (p) => p.startsWith("/pecas") },
         { href: "/mercadoria", label: "Chegou mercadoria", icon: "camiao" },
+        { href: "/clientes", label: "Clientes", icon: "coracao" },
         { href: "/relatorios", label: "Relatórios", icon: "grafico" },
         { href: "/registo", label: "Registo de acções", icon: "lapis" },
       ],

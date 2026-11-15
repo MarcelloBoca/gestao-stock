@@ -36,7 +36,9 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
   const [recebido, setRecebido] = useState("");
   const [erro, setErro] = useState("");
   const [juntou, setJuntou] = useState("");
-  const [feito, setFeito] = useState<{ total: number; forma: string; pecas: number } | null>(null);
+  const [feito, setFeito] = useState<{ total: number; forma: string; pecas: number; cliente: string } | null>(null);
+  const [cliNome, setCliNome] = useState("");
+  const [cliTel, setCliTel] = useState("");
   const [pending, start] = useTransition();
 
   const porId = useMemo(() => new Map(pecas.map((p) => [p.id, p])), [pecas]);
@@ -94,9 +96,9 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
     setErro("");
     if (!cesto.linhas.length) return setErro("O cesto está vazio.");
     if (!forma) return setErro("Escolha como o cliente pagou.");
-    const resumo = { total: cesto.total, forma, pecas: cesto.pecas };
+    const resumo = { total: cesto.total, forma, pecas: cesto.pecas, cliente: cliNome.trim() };
     start(async () => {
-      const r = await registarVenda(forma, cesto.linhas.map((l) => ({ variante_id: l.variante_id, quantidade: l.quantidade })));
+      const r = await registarVenda(forma, cesto.linhas.map((l) => ({ variante_id: l.variante_id, quantidade: l.quantidade })), { nome: cliNome, contacto: cliTel });
       if (r.error) {
         setErro(r.error);
         return;
@@ -104,6 +106,8 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
       cesto.limpar();
       setForma("");
       setRecebido("");
+      setCliNome("");
+      setCliTel("");
       setFeito(resumo);
       router.refresh();
     });
@@ -175,7 +179,8 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                 <span className="c-feito-ic"><Icon name="certo" size={30} stroke={2.4} /></span>
                 <h2 className="h1 sm">Venda registada!</h2>
                 <p className="p muted" style={{ fontSize: 17, lineHeight: "25px" }}>
-                  {mt(feito.total)} · {nomeForma(feito.forma)} · {feito.pecas} {feito.pecas === 1 ? "peça" : "peças"}
+                  {mt(feito.total)}, {nomeForma(feito.forma)}, {feito.pecas} {feito.pecas === 1 ? "peça" : "peças"}
+                  {feito.cliente ? <><br />Cliente: {feito.cliente}</> : null}
                   <br />O stock já foi actualizado.
                 </p>
               </div>
@@ -270,6 +275,20 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                     <span style={{ fontSize: 14, fontWeight: 600, color: "var(--suave)" }}>Total</span>
                     <span className="c-total-v">{mt(cesto.total)}</span>
                   </div>
+                  <fieldset className="v-cliente">
+                    <legend className="c-rot">Cliente <span className="muted" style={{ fontWeight: 500 }}>(opcional)</span></legend>
+                    <div className="v-dois">
+                      <div className="field">
+                        <label className="label" htmlFor="cli-nome">Nome</label>
+                        <input id="cli-nome" className="input" value={cliNome} onChange={(e) => setCliNome(e.target.value)} maxLength={80} autoComplete="off" placeholder="Ex.: Ana Sitoe" />
+                      </div>
+                      <div className="field">
+                        <label className="label" htmlFor="cli-tel">Contacto</label>
+                        <input id="cli-tel" className="input" type="tel" inputMode="tel" value={cliTel} onChange={(e) => setCliTel(e.target.value)} maxLength={20} autoComplete="off" placeholder="84 123 4567" />
+                      </div>
+                    </div>
+                    <p className="hint">Fica na lista de clientes da loja, para lhe mandar novidades por WhatsApp.</p>
+                  </fieldset>
                   <p className="c-rot">Como pagou o cliente?</p>
                   <div className="c-opts" style={{ ["--cols" as string]: 2 }}>
                     {FORMAS.map((f) => (
