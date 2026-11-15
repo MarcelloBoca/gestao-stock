@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Icon from "./Icon";
 import { Foto } from "./ui";
 import { useCesto } from "@/lib/cesto";
@@ -35,6 +35,12 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
   const [soStock, setSoStock] = useState(true);
   const [ordem, setOrdem] = useState("nome");
   const [verFiltros, setVerFiltros] = useState(false);
+  useEffect(() => {
+    if (!verFiltros) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setVerFiltros(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [verFiltros]);
   const [selId, setSelId] = useState<string | null>(null);
   const [cor, setCor] = useState<string | null>(null);
   const [tam, setTam] = useState<string | null>(null);
@@ -158,6 +164,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
               </Link>
             </div>
           ) : null}
+          <div className="v-barra-vender">
           <div className="v-linhabusca">
             <div className="v-busca">
               <label className="c-procura">
@@ -166,7 +173,7 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                 <input id="procura" type="search" placeholder="Procurar peça" value={q} onChange={(e) => setQ(e.target.value)} />
               </label>
               <button type="button" className="btn v-btn-filtros" aria-expanded={verFiltros} aria-controls="painel-filtros" onClick={() => setVerFiltros((v) => !v)}>
-                <Icon name="filtro" size={16} /> Filtros{activos.length ? <span className="v-conta">{activos.length}</span> : null}
+                <Icon name="filtro" size={16} /> Filtros{activos.filter((f) => f.k !== "cat").length ? <span className="v-conta">{activos.filter((f) => f.k !== "cat").length}</span> : null}
               </button>
             </div>
           </div>
@@ -179,16 +186,6 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
                   <strong style={{ fontSize: 18 }}>Filtros</strong>
                   <button type="button" className="btn btn-text btn-sm" onClick={limparFiltros}>Limpar tudo</button>
                 </div>
-                {categorias.length > 1 ? (
-                  <div className="v-filtro-g">
-                    <p className="c-rot">Tipo de peça</p>
-                    <div className="c-chips">
-                      {categorias.map((c) => (
-                        <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "" : c)}>{c}</button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
                 {numeros.length ? (
                   <div className="v-filtro-g">
                     <p className="c-rot">Número / tamanho</p>
@@ -229,20 +226,30 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
               </div>
             </div>
           ) : null}
-          {activos.length ? (
+          </div>
+          {categorias.length > 1 ? (
+            <div className="v-cats" role="group" aria-label="Tipo de peça">
+              <button type="button" className="c-chip" aria-pressed={!cat} onClick={() => setCat("")}>Todas</button>
+              {categorias.map((c) => (
+                <button key={c} type="button" className="c-chip" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "" : c)}>{c}</button>
+              ))}
+            </div>
+          ) : null}
+          {activos.filter((f) => f.k !== "cat").length ? (
             <div className="c-chips" aria-label="Filtros ligados">
-              {activos.map((f) => (
-                <button key={f.k} type="button" className="c-chip" aria-pressed="true" onClick={f.tirar} aria-label={`Tirar filtro ${f.t}`}>
+              {activos.filter((f) => f.k !== "cat").map((f) => (
+                <button key={f.k} type="button" className="c-chip v-tag" onClick={f.tirar} aria-label={`Tirar filtro ${f.t}`}>
                   {f.t} <Icon name="x" size={14} />
                 </button>
               ))}
             </div>
           ) : null}
-          <div className="c-entre" style={{ alignItems: "center", fontSize: 14, color: "var(--suave)" }}>
+          <div className="v-contagem">
             <span role="status">{lista.length === 1 ? "1 peça" : `${lista.length} peças`}</span>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              Ordenar
-              <select className="select" value={ordem} onChange={(e) => setOrdem(e.target.value)} style={{ width: "auto", minHeight: 36, paddingTop: 0, paddingBottom: 0 }}>
+            <label className="v-ordenar">
+              <Icon name="ordenar" size={16} />
+              <span aria-hidden="true">{ordem === "preco-asc" ? "Preço mais baixo" : ordem === "preco-desc" ? "Preço mais alto" : "Nome"}</span>
+              <select value={ordem} onChange={(e) => setOrdem(e.target.value)} aria-label="Ordenar por">
                 <option value="nome">Nome</option>
                 <option value="preco-asc">Preço mais baixo</option>
                 <option value="preco-desc">Preço mais alto</option>
@@ -255,17 +262,17 @@ export default function Vender({ pecas, modo }: { pecas: Peca[]; modo: "pecas" |
               {pecas.length ? <button type="button" className="btn" onClick={() => { setQ(""); limparFiltros(); }}>Ver todas as peças</button> : null}
             </div>
           ) : (
-            <div className="c-grid largo">
+            <div className="v-grelha">
               {lista.map((p) => {
                 const est = estadoStock(p.stock, p.stock_minimo);
                 return (
-                  <button key={p.id} type="button" className="c-pcard" aria-pressed={selId === p.id} aria-disabled={p.stock <= 0} onClick={() => abrir(p)}>
-                    <Foto path={p.foto} categoria={p.categoria} alt={p.nome} />
-                    <span className="c-pcard-n">{p.nome}</span>
-                    <span className="c-pcard-b">
-                      <span>{mt(p.preco)}</span>
-                      <span className={`c-q ${est}`}>{p.stock <= 0 ? "acabou" : `há ${p.stock}`}</span>
+                  <button key={p.id} type="button" className="v-pcard" aria-pressed={selId === p.id} aria-disabled={p.stock <= 0} onClick={() => abrir(p)}>
+                    <span className="v-pcard-foto">
+                      <Foto path={p.foto} categoria={p.categoria} alt={p.nome} />
+                      <span className={`v-badge ${est === "ok" ? "ok" : est === "zero" || p.stock <= 0 ? "zero" : "pouco"}`}>{p.stock <= 0 ? "Esgotado" : est === "ok" ? `${p.stock} un.` : `Últimas ${p.stock}`}</span>
                     </span>
+                    <span className="v-pcard-n">{p.nome}</span>
+                    <span className="v-pcard-p">{mt(p.preco)}</span>
                   </button>
                 );
               })}

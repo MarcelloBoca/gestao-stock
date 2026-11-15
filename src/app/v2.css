@@ -488,3 +488,46 @@ input, select, textarea, .input, .select, .textarea, .c-procura input, .v-campo-
   display: flex; align-items: center; justify-content: center; color: var(--rosa-texto);
 }
 .v-row-accao:hover { background: var(--rosa-claro); color: var(--rosa-texto); }
+
+/* =====================================================================
+   Vender: barra de pesquisa + filtros, tipos de peça sempre à vista,
+   cartões das peças e filtros em painel (folha no telemóvel, caixa
+   flutuante no computador, sem empurrar as peças para baixo).
+   ===================================================================== */
+.v-barra-vender { position: relative; }
+.v-cats { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
+.v-cats::-webkit-scrollbar { display: none; }
+.v-cats .c-chip { flex: none; min-height: 38px; padding: 0 14px; }
+.v-tag { background: var(--rosa-claro); border-color: var(--rosa-claro); color: var(--rosa-texto); gap: 4px; }
+.v-contagem { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--suave); min-height: 36px; }
+.v-ordenar { position: relative; display: inline-flex; align-items: center; gap: 6px; color: var(--rosa-texto); font-weight: 600; cursor: pointer; }
+.v-ordenar select {
+  appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit; font-size: 16px; font-weight: 600;
+  color: var(--rosa-texto); padding: 6px 2px; cursor: pointer;
+}
+.v-grelha { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 600px) { .v-grelha { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; } }
+.v-pcard {
+  display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 12px; border: 1px solid var(--linha); border-radius: 14px;
+  background: #fff; font: inherit; color: var(--ameixa); text-align: left; cursor: pointer; min-width: 0;
+}
+.v-pcard:hover { border-color: #dccfd7; }
+.v-pcard[aria-pressed="true"] { border-color: var(--rosa-texto); box-shadow: 0 0 0 1px var(--rosa-texto); }
+.v-pcard[aria-disabled="true"] { opacity: 0.55; }
+.v-pcard-foto { position: relative; display: block; margin-bottom: 4px; }
+.v-pcard-foto .c-foto { width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; }
+.v-pcard-foto .v-badge { position: absolute; top: 6px; left: 6px; }
+.v-pcard-n { font-size: 15px; font-weight: 600; line-height: 1.3; padding: 0 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 39px; }
+.v-pcard-p { font-size: 16px; font-weight: 700; padding: 0 4px; }
+@media (min-width: 900px) {
+  .v-cats { margin: 0; padding: 2px 0; flex-wrap: wrap; overflow: visible; }
+  .v-painel-filtros { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; width: min(520px, 100%); }
+  .v-painel-caixa { box-shadow: 0 12px 32px rgba(43, 28, 39, 0.16); }
+  .v-painel-caixa > .btn-primary { display: flex; }
+}
+.v-cats { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.v-ordenar { min-height: 36px; padding: 0 4px; }
+.v-ordenar select { position: absolute; inset: 0; width: 100%; opacity: 0; padding: 0; }
+.v-ordenar:has(select:focus-visible) { outline: 2px solid var(--rosa-texto); outline-offset: 2px; border-radius: 8px; }
+.v-pcard-n { min-height: 0; }
+.v-pcard-p { margin-top: auto; padding-top: 2px; }
