@@ -444,3 +444,20 @@ input, select, textarea, .input, .select, .textarea, .c-procura input, .v-campo-
 .alert { font-size: 14px; }
 .h1 { font-size: 32px; }
 @media (max-width: 899px) { .h1 { font-size: 28px; } .v-hero-v { font-size: 30px; } }
+
+/* Foto da peça: duas opções grandes lado a lado (câmara e galeria) */
+.v-foto-opcoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.v-foto-op {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 112px; padding: 12px 8px; border: 1.5px dashed #d7bccb; border-radius: 14px; background: var(--rosa-claro);
+  color: var(--ameixa); text-align: center; cursor: pointer;
+}
+.v-foto-op:hover { border-color: var(--rosa-texto); background: #f2dcea; }
+.v-foto-op:has(.v-ficheiro:focus-visible) { outline: 2px solid var(--rosa-texto); outline-offset: 2px; }
+.v-foto-ic { width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--rosa-texto); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.v-foto-t { font-size: 15px; font-weight: 700; }
+.v-foto-s { font-size: 13px; color: var(--suave); }
+.v-foto-com { display: flex; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--linha); border-radius: 14px; background: #fff; }
+.v-foto-com img { width: 96px; height: 96px; flex: none; border-radius: 12px; object-fit: cover; }
+.v-foto-com-acoes { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.v-foto-com-t { font-size: 14px; font-weight: 600; color: var(--paga); }
