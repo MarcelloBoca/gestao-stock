@@ -461,3 +461,6 @@ input, select, textarea, .input, .select, .textarea, .c-procura input, .v-campo-
 .v-foto-com img { width: 96px; height: 96px; flex: none; border-radius: 12px; object-fit: cover; }
 .v-foto-com-acoes { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .v-foto-com-t { font-size: 14px; font-weight: 600; color: var(--paga); }
+.v-foto-ver { display: flex; gap: 12px; align-items: center; margin-bottom: 4px; }
+.v-foto-ver img { width: 96px; height: 96px; flex: none; border-radius: 12px; object-fit: cover; border: 1px solid var(--linha); }
+.v-foto-ver-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }

@@ -126,40 +126,30 @@ export default function PecaForm({ inicial = {}, categorias, cores, tamanhos }: 
             <div className="field">
               <span className="label" id="foto-rot">Foto da peça <span className="muted" style={{ fontWeight: 500 }}>(opcional)</span></span>
               {preview ? (
-                <div className="v-foto-com">
+                <div className="v-foto-ver">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={preview} alt="Foto escolhida" />
-                  <div className="v-foto-com-acoes">
-                    <span className="v-foto-com-t">{novaFoto ? "Foto escolhida" : "Foto actual"}</span>
-                    <div className="v-dois" style={{ gap: 6 }}>
-                      <label className="btn btn-sm" style={{ position: "relative" }}>
-                        <Icon name="camara" size={16} /> Câmara
-                        <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="v-ficheiro" aria-label="Trocar: tirar outra foto" />
-                      </label>
-                      <label className="btn btn-sm" style={{ position: "relative" }}>
-                        <Icon name="imagem" size={16} /> Galeria
-                        <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={escolherFoto} className="v-ficheiro" aria-label="Trocar: escolher da galeria" />
-                      </label>
-                    </div>
-                    {novaFoto ? <button type="button" className="btn btn-text btn-sm" style={{ alignSelf: "flex-start", padding: 0 }} onClick={tirarFoto}>Tirar esta foto</button> : null}
-                  </div>
+                  <span className="v-foto-ver-t">
+                    <span style={{ color: "var(--paga)", fontWeight: 600 }}>{novaFoto ? "Foto escolhida" : "Foto actual"}</span>
+                    <span className="muted">Para trocar, use a câmara ou a galeria.</span>
+                    {novaFoto ? <button type="button" className="btn btn-text btn-sm" style={{ alignSelf: "flex-start", padding: 0, minHeight: 32 }} onClick={tirarFoto}>Tirar esta foto</button> : null}
+                  </span>
                 </div>
-              ) : (
-                <div className="v-foto-opcoes" role="group" aria-labelledby="foto-rot">
-                  <label className="v-foto-op">
-                    <span className="v-foto-ic"><Icon name="camara" size={24} stroke={1.8} /></span>
-                    <span className="v-foto-t">Câmara</span>
-                    <span className="v-foto-s">Tirar foto agora</span>
-                    <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="v-ficheiro" aria-label="Tirar foto com a câmara" />
-                  </label>
-                  <label className="v-foto-op">
-                    <span className="v-foto-ic"><Icon name="imagem" size={24} stroke={1.8} /></span>
-                    <span className="v-foto-t">Galeria</span>
-                    <span className="v-foto-s">Escolher uma foto</span>
-                    <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={escolherFoto} className="v-ficheiro" aria-label="Escolher foto da galeria" />
-                  </label>
-                </div>
-              )}
+              ) : null}
+              <div className="v-foto-opcoes" role="group" aria-labelledby="foto-rot">
+                <label className="v-foto-op">
+                  <span className="v-foto-ic"><Icon name="camara" size={24} stroke={1.8} /></span>
+                  <span className="v-foto-t">Câmara</span>
+                  <span className="v-foto-s">{preview ? "Tirar outra foto" : "Tirar foto agora"}</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="v-ficheiro" aria-label="Tirar foto com a câmara" />
+                </label>
+                <label className="v-foto-op">
+                  <span className="v-foto-ic"><Icon name="imagem" size={24} stroke={1.8} /></span>
+                  <span className="v-foto-t">Galeria</span>
+                  <span className="v-foto-s">{preview ? "Escolher outra foto" : "Escolher uma foto"}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={escolherFoto} className="v-ficheiro" aria-label="Escolher foto da galeria" />
+                </label>
+              </div>
               <input ref={fotoRef} type="file" name="foto" hidden tabIndex={-1} aria-hidden="true" />
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
