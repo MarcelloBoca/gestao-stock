@@ -7,6 +7,7 @@ import { lerPeriodo } from "@/lib/periodo";
 import { FORMAS } from "@/lib/types";
 import { listarVendas, relatorio } from "@/lib/vendas";
 import { Escuro, Foto, LucroTile, PageHead } from "@/components/ui";
+import Icon from "@/components/Icon";
 import { FiltroPeriodo } from "@/components/FiltroPeriodo";
 
 export const metadata: Metadata = { title: "Relatórios" };
@@ -108,7 +109,15 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
 
   return (
     <div className="c-page" style={{ maxWidth: 1100 }}>
-      <PageHead title="Relatórios" sub="Vendas e peças por período" />
+      <PageHead
+        title="Relatórios"
+        sub="Vendas e peças por período"
+        action={
+          <a href={`/relatorios/pdf?${new URLSearchParams(periodo.p === "datas" ? { p: "datas", de: periodo.de, ate: periodo.ate } : { p: periodo.p }).toString()}`} className="btn" download>
+            <Icon name="exportar" size={16} /> Exportar PDF
+          </a>
+        }
+      />
       {abas}
       <FiltroPeriodo base="/relatorios" periodo={periodo} hoje={diaIso()} />
       <div className="v-dois">
